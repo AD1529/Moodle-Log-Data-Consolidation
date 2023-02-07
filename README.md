@@ -11,10 +11,6 @@ This analysis is based on the following papers:
 
 - Rotelli, Daniela, and Anna Monreale. "Time-on-Task Estimation by data-driven Outlier Detection based on Learning Activities." LAK22: 12th International Learning Analytics and Knowledge Conference. 2022.
 
-- Rotelli, Daniela, Anna Monreale, and Riccardo Guidotti. "Uncovering Student Temporal Learning Patterns." European Conference on Technology Enhanced Learning. Springer, Cham, 2022.
-
-- Articolo Ale
-
 - Journals
 
 
