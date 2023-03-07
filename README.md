@@ -71,7 +71,6 @@ You can get start and end dates by querying the database:
 SELECT shortname, startdate, enddate 
 FROM mdl_course
 ```
-An example of specific course data extraction is provided in `package_name/execution/extract_course_data.py`. 
 
 ### Clean the dataset
 You can either clean the entire dataset or each course individually by modifying the function *clean_records* in
