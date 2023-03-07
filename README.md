@@ -45,13 +45,13 @@ A complete list of roles is available in [Site administration > Users > Permissi
 To add new roles, you can integrate the function *add_role* in `package_name/algorithms/integrating.py`.
 
 ### Access your data
-Put all files in the `package_name/datasets` folder. 
-Replace paths in `package_name/execution/paths.py`. 
+Put all files in the `src/datasets` folder. 
+Replace paths in `src/paths.py`. 
 
 ### Get your consolidated data
-Modify the parameters of the function *get_consolidated_data* in `package_name/execution/data_consolidation.py` adding
-all paths according to your needs and run.
-Go to `package_name/execution/consolidate_dataframe.py` to change the final resultant fields. 
+Run the `main.py`.
+According to your needs, you can modify *get_consolidated_data* function call.
+
 
 ## Get consolidated course data
 Once the data has been consolidated, you can extract data from specific courses.
@@ -62,7 +62,7 @@ Then, to extract specific data, you can specify the following parameters: 'year'
 Note that you may choose more than one entry, and that each entry must be provided as a list.
 The entire dataset is returned if you make no selections.
 
-You can also specify the 'dates_path' containing the course dates to remove values that don't fall within the start and 
+You can also specify the 'dates_path'  containing the course dates to remove values that don't fall within the start and 
 end dates.
 You can get start and end dates by querying the database:
 ```bash
@@ -78,6 +78,40 @@ You can either clean the entire dataset or each course individually by modifying
 ```bash
 records = cl.clean_records(records)
 or
+course_A = cl.clean_records(course_A)
+```
+### Example
+
+```bash
+from src.classes.records import Records
+import src.algorithms.cleaning as cl
+import src.algorithms.extracting as ex
+import pandas as pd
+from src.paths import course_dates_path
+
+# ------------
+# GET DATA
+# ------------
+# get the consolidated dataframe
+df_path = '../datasets/df_consolidated.csv'
+df = pd.read_csv(df_path)
+
+# create a Records object to use its methods
+records = Records(df)
+
+
+# ----------------------
+# GET COURSES TO ANALYSE
+# ----------------------
+# select specific attributes to get the desired values
+course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], datespath=course_dates_path)
+course_B = ex.extract_records(records, year=[2021], username=['Student 01'])
+
+# -----------------
+# CLEAN THE DATASET
+# -----------------
+# you can either clean the entire dataset or each course individually
+# records = cl.clean_records(records)
 course_A = cl.clean_records(course_A)
 ```
 
