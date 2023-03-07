@@ -99,7 +99,6 @@ df = pd.read_csv(df_path)
 # create a Records object to use its methods
 records = Records(df)
 
-
 # ----------------------
 # GET COURSES TO ANALYSE
 # ----------------------
