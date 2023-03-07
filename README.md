@@ -50,6 +50,7 @@ Replace paths in `src/paths.py`.
 
 ### Get your consolidated data
 Run the `main.py`.
+
 According to your needs, you can modify *get_consolidated_data* function call.
 If you want to get more fields, modify the variable *columns*.
 
