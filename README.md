@@ -41,7 +41,7 @@ FROM mdl_role_assignments
 WHERE roleid = '???'
 ```
 
-A complete list of roles is available from. Site [administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace your_moodle_site with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the logs.
+A complete list of roles is available in [Site administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace your_moodle_site with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the roles.
 You have then to modify or integrate the function *add_role* in `package_name/algorithms/integrating.py`
 
 ### Access your data
