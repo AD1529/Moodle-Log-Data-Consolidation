@@ -6,7 +6,7 @@ This repository contains the template for consolidating Moodle log data. It is b
 You first need to collect logs and database data:
 
 - platform logs from [Moodle log generation interface](https://your_moodle_site/report/log/index.php?id=0)
-(replace your_moodle_site with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the logs.
+(replace *your_moodle_site* with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the logs.
 - database data
 - course shortnames
 - user roles
@@ -41,7 +41,7 @@ FROM mdl_role_assignments
 WHERE roleid = '???'
 ```
 
-A complete list of roles is available in [Site administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace your_moodle_site with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the roles.
+A complete list of roles is available in [Site administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace *your_moodle_site* with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the roles.
 To add new roles, you can integrate the function *add_role* in `package_name/algorithms/integrating.py`.
 
 ### Access your data
