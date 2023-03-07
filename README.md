@@ -74,7 +74,7 @@ FROM mdl_course
 
 ### Clean the dataset
 You can either clean the entire dataset or each course individually by modifying the function *clean_records* in
-`package_name/algorithms/cleaning.py` according to your specific needs.
+`src/algorithms/cleaning.py` according to your specific needs.
 
 ```bash
 records = cl.clean_records(records)
