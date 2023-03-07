@@ -70,6 +70,7 @@ You can get start and end dates by querying the database:
 ```bash
 SELECT shortname, startdate, enddate 
 FROM mdl_course
+where id <> 1
 ```
 
 ### Clean the dataset
