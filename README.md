@@ -9,7 +9,7 @@ You first need to collect logs and database data:
 (replace your_moodle_site with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the logs.
 - database data
 - course shortnames
-- user roles (student, teacher, non-editing teacher, course creator, manager)
+- user roles
 
 Export all files into *CSV* format.
 
