@@ -105,7 +105,7 @@ records = Records(df)
 # GET COURSES TO ANALYSE
 # ----------------------
 # select specific attributes to get the desired values
-course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], datespath=course_dates_path)
+course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], course_dates=course_dates_path)
 course_B = ex.extract_records(records, year=[2021], username=['Student 01'])
 
 # -----------------
