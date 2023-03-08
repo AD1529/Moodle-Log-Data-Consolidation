@@ -44,6 +44,16 @@ WHERE roleid = '???'
 A complete list of roles is available in [Site administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace *your_moodle_site* with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the roles.
 To add new roles, you can integrate the function *add_role* in `src/algorithms/integrating.py`.
 
+#### Deleted users
+You could want to remove records of deleted users. Retrieve these data from the database and add the .csv file in the `src/datasets` folder. 
+
+Query for deleted users:
+```bash
+SELECT id
+FROM mdl_user
+WHERE deleted = 1
+```
+
 ### Access your data
 Put all files in the `src/datasets` folder. 
 Replace paths in `src/paths.py`. 
