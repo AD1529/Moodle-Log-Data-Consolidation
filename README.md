@@ -45,7 +45,7 @@ A complete list of roles is available in [Site administration > Users > Permissi
 To add new roles, you can integrate the function *add_role* in `src/algorithms/integrating.py`.
 
 #### Deleted users
-You may choose to purge records of deleted users. Get the file from the database.
+You may choose to purge records of deleted users. Get the list of deleted users' id from the database.
 
 Query for deleted users:
 ```bash
