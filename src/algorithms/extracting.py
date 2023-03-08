@@ -3,7 +3,7 @@ import src.algorithms.integrating as it
 from pandas import DataFrame
 
 
-def get_startdate_enddate(df: DataFrame, course_dates_path: str, courses: [str], years: [int]):
+def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], years: [int]):
 
     """
     Remove values that don't fall within the start and end dates of the course.
@@ -15,7 +15,7 @@ def get_startdate_enddate(df: DataFrame, course_dates_path: str, courses: [str],
 
     Args:
         df: The dataframe.
-        course_dates_path: str,
+        course_dates: str,
             The path of the data extracted from the database.
         courses: list of str,
             The courses whose data are removed.
@@ -27,7 +27,7 @@ def get_startdate_enddate(df: DataFrame, course_dates_path: str, courses: [str],
 
     """
 
-    course_dates = it.get_dataframe(course_dates_path, columns=['id', 'shortname', 'startdate', 'enddate'])
+    course_dates = it.get_dataframe(course_dates, columns=['id', 'shortname', 'startdate', 'enddate'])
 
     for course in courses:
         for year in years:
@@ -46,7 +46,7 @@ def extract_records(records: Records,
                     course_area: [str] = None,
                     role: [str] = None,
                     username: [str] = None,
-                    course_dates_path: str = "") -> Records:
+                    course_dates: str = "") -> Records:
 
     """
     Return the filtered records by year, course_area, role and/or username and sorted by the specified field.
@@ -62,7 +62,7 @@ def extract_records(records: Records,
             'Student', 'Teacher', 'Manager', etc.
         username: str,
             The username of the user.
-        course_dates_path: str,
+        course_dates: str,
             The path of the data extracted from the database.
 
     Returns:
@@ -87,8 +87,8 @@ def extract_records(records: Records,
         df = df.loc[df[column].isin(filters.get(column))]
 
     # get only the values between start_date and end_date
-    if course_dates_path != "" and course_area is not None:
-        df = get_startdate_enddate(df, course_dates_path, course_area, year)
+    if course_dates != "" and course_area is not None:
+        df = get_startdate_enddate(df, course_dates, course_area, year)
 
     # create a Records object for the extracted values
     records = Records(df)
