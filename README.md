@@ -45,7 +45,7 @@ A complete list of roles is available in [Site administration > Users > Permissi
 To add new roles, you can integrate the function *add_role* in `src/algorithms/integrating.py`.
 
 #### Deleted users
-You could want to remove records of deleted users. Retrieve these data from the database and add the .csv file in the `src/datasets` folder. 
+You may choose to purge records of deleted users. Get the file from the database.
 
 Query for deleted users:
 ```bash
@@ -55,7 +55,7 @@ WHERE deleted = 1
 ```
 
 ### Access your data
-Put all files in the `src/datasets` folder. 
+Place all *CSV* files in `src/datasets`. 
 Replace paths in `src/paths.py`. 
 
 ### Get your consolidated data
