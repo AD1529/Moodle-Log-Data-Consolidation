@@ -14,7 +14,7 @@ def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], year
         where id <> 1
 
     Args:
-        df: The dataframe.
+        df: The dataframe object.
         course_dates: str,
             The path of the data extracted from the database.
         courses: list of str,

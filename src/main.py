@@ -12,6 +12,7 @@ def get_consolidated_data(platform_logs: str or DataFrame,
                           non_editing_teacher_role: str = "",
                           course_creator_role: str = "",
                           manager_role: str = "",
+                          deleted_users: str = "",
                           directory: str = "") -> DataFrame:
     """
 
@@ -32,6 +33,8 @@ def get_consolidated_data(platform_logs: str or DataFrame,
             The path to course creator data.
         manager_role: str, optional
             The path to manager data.
+        deleted_users: str, optional
+            The path to deleted users data.
         directory:  str, optional
             The path to the directory containing logs extracted user by user.
 
@@ -48,11 +51,11 @@ def get_consolidated_data(platform_logs: str or DataFrame,
         platform_logs = it.collect_user_logs(directory)
     # join the platform and the database data
     joined_logs = it.get_joined_logs(platform_logs, database_data)
-    # add course shortname
+    # add course shortnames
     joined_logs = it.add_course_shortname(joined_logs, course_shortnames)
     # add year to platform logs
     joined_logs = it.add_year(joined_logs)
-    # add roles : teacher and student
+    # add roles
     joined_logs = it.add_role(joined_logs, student_role, teacher_role,
                               non_editing_teacher_role, course_creator_role, manager_role)
     # add the area to platform logs
@@ -75,8 +78,8 @@ def get_consolidated_data(platform_logs: str or DataFrame,
     # --------------------
     # remove admin, cron, and guest records
     joined_logs = cl.remove_admin_cron_guest_records(joined_logs)
-    # remove records with no course
-    joined_logs = cl.remove_records_left(joined_logs)
+    # remove deleted users if any
+    joined_logs = cl.remove_deleted_users(joined_logs, deleted_users)
 
     # --------------------
     # DATA SELECTION
@@ -104,10 +107,12 @@ if __name__ == '__main__':
                                course_shortnames=course_shortnames_path,
                                student_role=student_role_path,
                                teacher_role=teacher_role_path,
-                               manager_role=manager_role_path)
+                               non_editing_teacher_role=non_editing_teacher_role_path,
+                               manager_role=manager_role_path,
+                               deleted_users=deleted_users_path)
 
-    # clean useless data from the entire dataset
-    df = cl.clean_dataset_records(df)
+    # remove useless data from the entire dataset
+    # df = cl.clean_dataset_records(df)
 
     # you can save the dataset for further analysis
-    df.to_csv('../datasets/df_consolidated.csv')
+    df.to_csv('datasets/df_consolidated.csv')

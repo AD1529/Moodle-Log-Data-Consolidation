@@ -9,7 +9,7 @@ def get_dataframe(file_path: str, columns: [] = None) -> DataFrame:
 
     Args:
         file_path: str,
-            The path of the dataframe.
+            The path of the dataframe object.
         columns: list,
             The list of column names.
 
@@ -131,8 +131,9 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
 def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
     """
     Add the shortname of the course based on the courseid extracted from the table 'mdl_course'. By modifying the
-    function, it is also possible to add the fullname according to specific requirements. Please be aware that you can
-    only retrieve data for certain courses by specifying them in the course names file.
+    function, it is also possible to add the fullname according to specific requirements. Please be aware that if you
+    want to retrieve data only for specific courses, you can list them in the course names file (with the corresponding
+    id). Data belonging to other courses will be removed during cleaning.
 
     Query: SELECT id, shortname (or fullname)
            FROM mdl_course
@@ -162,7 +163,7 @@ def add_year(df: DataFrame) -> DataFrame:
     Add the field year to the dataframe.
 
     Args:
-        df: the joined dataframe.
+        df: The dataframe object.
 
     Returns:
         The joined dataframe with the year field.
@@ -189,6 +190,10 @@ def add_role(df: DataFrame,
     only within a course. A user can have multiple roles, representing as both a teacher and a student in different
     courses. The complete list of roles is available at the page: your_moodle_site/admin/roles/manage.php. This
     function can be extended according to specific requirements.
+
+    Please be aware that any system roles (suche as manager, course-creator, or specifically created role) apply to the
+    assigned users throughout the entire system, including the front page and all the courses. A user can be a teacher
+    in a course and a student in another course. A manager can only be a manager.
 
     Query for student, teacher, and non-editing teacher:
         SELECT cx.instanceid as courseid, u.id as userid
@@ -303,6 +308,8 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
     df.loc[df['Event context'] == 'Front page', 'Course'] = 'Overall Site'
     df.loc[df['Event context'] == 'Forum: Site announcements', 'Course'] = 'Overall Site'
     df.loc[df['Event name'] == 'Notification viewed', 'Course'] = 'Overall Site'
+    df.loc[(df['Event name'] == 'Notification sent') &
+           (df['Affected user'] == df['User full name']), 'Course'] = 'Overall Site'
     df.loc[(df['Event name'] == 'Blog entries viewed') &
            (df['Affected user'] == df['User full name']), 'Course'] = 'Overall Site'
     df.loc[(df['Event name'] == 'User report viewed') &
@@ -452,6 +459,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
 
     # notification
     df.loc[df['Event name'] == 'Notification viewed', 'Component'] = 'Notification'
+    df.loc[df['Event name'] == 'Notification sent', 'Component'] = 'Notification'
 
     # profile participant
     df.loc[df['Event name'] == 'User list viewed', 'Component'] = 'Participant profile'

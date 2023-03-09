@@ -7,7 +7,7 @@ def rename_columns(df: DataFrame) -> DataFrame:
     Rename the colum names.
 
     Args:
-        df: The dataframe.
+        df: The dataframe object.
 
     Returns:
         The dataframe with renamed columns.
@@ -36,7 +36,7 @@ def set_data_types(df: DataFrame) -> DataFrame:
     Set the data types.
 
     Args:
-        df: The dataframe.
+        df: The dataframe object.
 
     Returns:
         The dataframe with the data types set.
@@ -70,7 +70,7 @@ def make_timestamp_readable(df: DataFrame) -> DataFrame:
     Transform the timestamps in standard format.
 
     Args:
-        df: The dataframe.
+        df: The dataframe object.
 
     Returns:
         The dataframe with a new column 'Time'.
