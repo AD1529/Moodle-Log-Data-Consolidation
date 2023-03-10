@@ -17,25 +17,25 @@ Export all files into *CSV* format.
 To access the database, you can install the [Configurable reports](https://moodle.org/plugins/block_configurable_reports) plugin. 
 The following queries can be used to retrieve data from Moodle database.
 #### Database data
-```bash
+```SQL
 SELECT id, userid, courseid, relateduserid, timecreated
 FROM mdl_logstore_standard_log
 ```
 #### Course shortname
-```bash
+```SQL
 SELECT id, shortname
 FROM mdl_course
 ```
 #### User roles
 Query for student (role = 5), teacher (role = 3), and non-editing teacher (role = 4):
-```bash
+```SQL
 SELECT cx.instanceid as courseid, u.id as userid
 FROM mdl_course c LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid
 LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '???' AND cx.instanceid <> 1
 LEFT OUTER JOIN mdl_user u ON ra.userid = u.id Where cx.contextlevel = '50'
 ```
 Query for manager (role = 1) and course creator (role = 2):
-```bash
+```SQL
 SELECT distinct userid
 FROM mdl_role_assignments
 WHERE roleid = '???'
@@ -48,7 +48,7 @@ To add new roles, you can integrate the function *add_role* in `src/algorithms/i
 You may choose to purge records of deleted users. Get the list of deleted users' id from the database.
 
 Query for deleted users:
-```bash
+```SQL
 SELECT id
 FROM mdl_user
 WHERE deleted = 1
@@ -77,7 +77,7 @@ The entire dataset is returned if you make no selections.
 You can also specify the 'dates_path'  containing the course dates to remove values that don't fall within the start and 
 end dates.
 You can get start and end dates by querying the database:
-```bash
+```SQL
 SELECT shortname, startdate, enddate 
 FROM mdl_course
 where id <> 1
@@ -87,7 +87,7 @@ where id <> 1
 You can either clean the entire dataset or each course individually by modifying the function *clean_records* in
 `src/algorithms/cleaning.py` according to your specific needs.
 
-```bash
+```SQL
 records = cl.clean_records(records)
 or
 course_A = cl.clean_records(course_A)
