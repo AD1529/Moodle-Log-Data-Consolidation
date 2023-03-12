@@ -41,11 +41,11 @@ FROM mdl_role_assignments
 WHERE roleid = '???'
 ```
 
+Query for admin role:
 ```SQL
- Query for admin:
-        SELECT value
-        FROM mdl_config
-        WHERE name='siteadmins'
+SELECT value
+FROM mdl_config
+WHERE name='siteadmins'
 ```
 
 A complete list of roles is available in [Site administration > Users > Permissions > Define roles](https://your_moodle_site/admin/roles/manage.php) (replace *your_moodle_site* with the address of your site). Please be aware that the *Manager* role is a minimum requirement to access the roles.
