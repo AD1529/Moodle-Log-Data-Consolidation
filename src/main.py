@@ -12,9 +12,11 @@ def get_consolidated_data(platform_logs: str or DataFrame,
                           non_editing_teacher_role: str = "",
                           course_creator_role: str = "",
                           manager_role: str = "",
+                          admin_role: str = "",
                           deleted_users: str = "",
                           directory: str = "") -> DataFrame:
     """
+    Get consolidated data.
 
     Args:
         platform_logs: str,
@@ -32,6 +34,8 @@ def get_consolidated_data(platform_logs: str or DataFrame,
         course_creator_role: str, optional
             The path to course creator data.
         manager_role: str, optional
+            The path to manager data.
+        admin_role: str, optional
             The path to manager data.
         deleted_users: str, optional
             The path to deleted users data.
@@ -56,20 +60,18 @@ def get_consolidated_data(platform_logs: str or DataFrame,
     # add year to platform logs
     joined_logs = it.add_year(joined_logs)
     # add roles
-    joined_logs = it.add_role(joined_logs, student_role, teacher_role,
-                              non_editing_teacher_role, course_creator_role, manager_role)
+    joined_logs = it.add_role(joined_logs, student_role, teacher_role, non_editing_teacher_role,
+                              course_creator_role, manager_role, admin_role)
     # add the area to platform logs
     joined_logs = it.course_area_categorisation(joined_logs)
     # redefine components
     joined_logs = it.component_redefinition(joined_logs)
+    # identify actions on deleted modules
+    joined_logs = it.identify_deleted_modules(joined_logs)
 
     # --------------------
     # DATA TRANSFORMATION
     # --------------------
-    # rename the dataframe columns
-    joined_logs = tr.rename_columns(joined_logs)
-    # convert data types for further analysis
-    joined_logs = tr.set_data_types(joined_logs)
     # convert the timestamps in a human-readable format
     joined_logs = tr.make_timestamp_readable(joined_logs)
 
@@ -86,11 +88,12 @@ def get_consolidated_data(platform_logs: str or DataFrame,
     # --------------------
     # columns of the dataframe
     # Time, Username, Affected_user, Event_context, Component, Event_name, Description, Origin, IP_address, ID, user_id,
-    # course_id, related_user_id, Unix_Time, Course_Area, Year, Role
+    # course_id, related_user_id, Unix_Time, Course_Area, Year, Role, Type
 
     # select and reorder columns
     columns = ['ID', 'Time', 'Year', 'Course_Area', 'Unix_Time', 'Username', 'Component', 'Event_name', 'Role',
-               'user_id']
+               'userid', 'Type']
+
     # drop unused columns
     joined_logs = joined_logs[columns].copy()
 
@@ -109,10 +112,11 @@ if __name__ == '__main__':
                                teacher_role=teacher_role_path,
                                non_editing_teacher_role=non_editing_teacher_role_path,
                                manager_role=manager_role_path,
+                               admin_role=admin_role_path,
                                deleted_users=deleted_users_path)
 
     # remove useless data from the entire dataset
-    # df = cl.clean_dataset_records(df)
+    df = cl.clean_dataset_records(df)
 
     # you can save the dataset for further analysis
     df.to_csv('datasets/df_consolidated.csv')

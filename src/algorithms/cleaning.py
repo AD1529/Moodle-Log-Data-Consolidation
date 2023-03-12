@@ -11,7 +11,7 @@ def remove_admin_cron_guest_records(df: DataFrame) -> DataFrame:
     '-': cron jobs.
 
     Args:
-        df: The dataframe object.
+        df (object): The dataframe object.
 
     Returns:
         The cleaned dataframe.
@@ -23,7 +23,7 @@ def remove_admin_cron_guest_records(df: DataFrame) -> DataFrame:
     cli = list((df.loc[df['Origin'] == 'cli']).index)
     restore = list((df.loc[df['Origin'] == 'restore']).index)
     guest = list((df.loc[df['Role'] == 'Guest']).index)
-    login_as = list((df.loc[(df['Username'].str.contains(' as ')) & (df['Event_context'] == 'Other')]).index)
+    login_as = list(df.loc[df['Username'].str.contains(' as ')].loc[df['Event_context'] == 'Other'].index)
 
     # drop records
     to_remove = admin + cron + cli + restore + guest + login_as
@@ -42,7 +42,7 @@ def remove_deleted_users(df: DataFrame, deleted_users: str) -> DataFrame:
         WHERE deleted = 1
 
     Args:
-        df: The dataframe object.
+        df (object): The dataframe object.
         deleted_users: str,
             The path to
 
@@ -51,10 +51,14 @@ def remove_deleted_users(df: DataFrame, deleted_users: str) -> DataFrame:
 
     """
     if deleted_users != '':
+        # get data
         deleted_users = it.get_dataframe(deleted_users, columns='id')
+        # set data types
+        deleted_users['id'] = deleted_users['id'].astype('Int64')
+        # remove records of deleted users
         for user_id in deleted_users['id']:
-            user_logs = list((df.loc[df['user_id'] == str(user_id)]).index)
-            df.drop(user_logs, axis=0, inplace=True)
+            deleted_user_logs = list((df.loc[df['userid'] == user_id]).index)
+            df.drop(deleted_user_logs, axis=0, inplace=True)
 
     return df
 
@@ -71,7 +75,7 @@ def clean_dataset_records(df: DataFrame) -> DataFrame:
     consecutive events, the dataset cleaning should be performed after the duration calculation to avoid biased results.
 
     Args:
-        df: The dataframe object.
+        df (object): The dataframe object.
 
     Returns:
         The cleaned dataframe.
@@ -92,33 +96,34 @@ def clean_dataset_records(df: DataFrame) -> DataFrame:
     prediction = list((df.loc[df['Event_name'] == 'Prediction process started']).index)
 
     # actions performed on deleted modules
-    other = list((df.loc[df['Event_context'] == 'Other']).index)
+    other = list((df.loc[df['Type'] == 'Deleted']).index)
 
     # data whose course is not listed in the course_shortnames file and whose area is absent
-    records_left = (df.loc[df.Course_Area == 'nan']).index  # the course/area field if of type text
+    records_left = list((df.loc[df.Course_Area == 'nan']).index)  # the course/area field if of type text
 
     # remove remaining admin/manager-related actions that are not specified in the integrating functions
     system = list((df.loc[df['Component'] == 'System']).index)
 
-    to_remove = grd_itm_ctd + grd_itm_upd + user_graded + \
-        logs + recycle_bin + failed_login + report + insights + prediction + other + records_left + system
+    to_remove = grd_itm_ctd + grd_itm_upd + user_graded + logs + recycle_bin + failed_login + report + insights + \
+        prediction + other + records_left + system
     df.drop(to_remove, axis=0, inplace=True)
 
     return df
 
 
-def clean_records(records: Records) -> Records:
+def clean_specific_records(records: Records) -> Records:
     """
     This function removes specific records. This function is customisable according to specific needs.
 
     Args:
-        records: The Records object.
+        records (object): The Records object.
 
     Returns:
         The cleaned Records object.
 
     """
 
+    # get the dataframe
     df = records.get_df()
 
     # dataset specific

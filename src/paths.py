@@ -11,6 +11,7 @@ teacher_role_path = 'datasets/teacher_role.csv'
 non_editing_teacher_role_path = 'datasets/non_editing_teacher_role.csv'
 course_creator_role_path = ''
 manager_role_path = 'datasets/manager_role.csv'
+admin_role_path = 'datasets/admin_role.csv'
 
 # dates
 course_dates_path = 'datasets/course_dates.csv'

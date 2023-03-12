@@ -1,3 +1,4 @@
+import src.algorithms.transforming as tr
 import pandas as pd
 from pandas import DataFrame
 import glob
@@ -56,7 +57,7 @@ def collect_user_logs(directory_path: str) -> DataFrame:
         global_table = pd.concat([global_table, user_logs], axis=0)
 
     # reset the index
-    global_table.reset_index(drop=True)
+    global_table = global_table.reset_index(drop=True)
 
     return global_table
 
@@ -70,8 +71,8 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
     from Moodle log generation interface represents the last action. Some values may not be merged because the lengths
     of the two files may not be equal (some logs can be missed if you download the two files one after the other) ,
     thus they must be aligned. You can either use the dataframe or a filepath.
-    Please note that if you selected specific users, the query for the extraction of database data must be filtered
-    with specific userid.
+    Please note that if you want to select specific users, the query for the extraction of database data must be
+    filtered with their specific userid.
 
     Query to extract database data:
         SELECT id, userid, courseid, relateduserid, timecreated
@@ -125,6 +126,11 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
     # concatenate data
     joined_logs = pd.concat([platform_logs, database_data], axis=1)
 
+    # rename the dataframe columns
+    joined_logs = tr.rename_columns(joined_logs)
+    # set data type for further analysis
+    joined_logs = tr.set_data_types(joined_logs)
+
     return joined_logs
 
 
@@ -147,13 +153,19 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
         The dataframe with the field shortname.
 
     """
-
-    df_course_names = get_dataframe(course_names, columns=['id', 'shortname'])
-    shortnames = df_course_names['shortname']
+    # get data
+    course_names = get_dataframe(course_names, columns=['id', 'shortname'])
+    # set data type
+    course_names['id'] = course_names['id'].astype('Int64')
+    course_names['shortname'] = course_names['shortname'].astype('str')
+    shortnames = course_names['shortname']
 
     for shortname in shortnames:
-        courseid = df_course_names.loc[df_course_names['shortname'] == shortname]['id'].values[0]
-        df.loc[df['courseid'] == courseid, 'Course'] = shortname
+        courseid = course_names.loc[course_names['shortname'] == shortname]['id'].values[0]
+        df.loc[df['courseid'] == courseid, 'Course_Area'] = shortname
+
+    # set data type
+    df['Course_Area'] = df['Course_Area'].astype('str')
 
     return df
 
@@ -172,15 +184,19 @@ def add_year(df: DataFrame) -> DataFrame:
 
     df['Year'] = df['Time'].map(lambda x: int(x.split('/')[2].split(',')[0]) + 2000)
 
+    # set data type
+    df['Year'] = df['Year'].astype('Int64')
+
     return df
 
 
 def add_role(df: DataFrame,
-             course_students: str,
-             course_teachers: str = '',
-             course_non_editing_teachers: str = '',
-             course_creators: str = '',
-             managers: str = '') -> DataFrame:
+             student_role: str,
+             teacher_role: str = '',
+             non_editing_teacher_role: str = '',
+             course_creator_role: str = '',
+             manager_role: str = '',
+             admin_role: str = '') -> DataFrame:
 
     """
     Add the roles to the dataframe.
@@ -191,9 +207,9 @@ def add_role(df: DataFrame,
     courses. The complete list of roles is available at the page: your_moodle_site/admin/roles/manage.php. This
     function can be extended according to specific requirements.
 
-    Please be aware that any system roles (suche as manager, course-creator, or specifically created role) apply to the
-    assigned users throughout the entire system, including the front page and all the courses. A user can be a teacher
-    in a course and a student in another course. A manager can only be a manager.
+    Please be aware that any system roles (suche as admin, manager, course-creator, or specifically created role) apply
+    to the assigned users throughout the entire system, including the front page and all the courses. A user can be a
+    teacher in a course and a student in another course. A manager can only be a manager.
 
     Query for student, teacher, and non-editing teacher:
         SELECT cx.instanceid as courseid, u.id as userid
@@ -206,75 +222,107 @@ def add_role(df: DataFrame,
         FROM mdl_role_assignments
         WHERE roleid = '???'
 
+    Query for admin:
+        SELECT value
+        FROM mdl_config
+        WHERE name = 'siteadmins'
+
     Args:
         df: the joined dataframe.
-        course_students: str,
+        student_role: str,
             The path of the data extracted from database.
             role id = 5, this field is mandatory
-        course_teachers: str,
+        teacher_role: str,
             The path of the data extracted from database.
             role id = 3
-        course_non_editing_teachers: str,
+        non_editing_teacher_role: str,
             The path of the data extracted from database.
             role id = 4
-        course_creators: str,
+        course_creator_role: str,
             The path of the data extracted from database.
             role id = 2
-        managers: str,
+        manager_role: str,
             The path of the data extracted from database.
             role id = 1
+        admin_role: str,
+            The path of the data extracted from database.
 
     Returns:
         The joined dataframe with the role integration.
 
     """
 
+    # get data
+    student_role = get_dataframe(student_role, columns=['courseid', 'userid'])
+    # set data type
+    student_role['courseid'] = student_role['courseid'].astype('Int64')
+    student_role['userid'] = student_role['userid'].astype('Int64')
     # assign the course student role by matching the course id and the user id
-    course_students = get_dataframe(course_students, columns=['courseid', 'userid'])
-    for idx in range(len(course_students)):
-        df.loc[(df['courseid'] == course_students.iloc[idx]['courseid']) &
-               (df['userid'] == course_students.iloc[idx]['userid']), 'Role'] = 'Student'
+    for idx in range(len(student_role)):
+        df.loc[(df['courseid'] == student_role.iloc[idx]['courseid']) &
+               (df['userid'] == student_role.iloc[idx]['userid']), 'Role'] = 'Student'
 
-    # assign the course teacher role by matching the course id and the user id
-    if course_teachers != '':
-        course_teachers = get_dataframe(course_teachers, columns=['courseid', 'userid'])
-        for idx in range(len(course_teachers)):
-            df.loc[(df['courseid'] == course_teachers.iloc[idx]['courseid']) &
-                   (df['userid'] == course_teachers.iloc[idx]['userid']), 'Role'] = 'Teacher'
+    if teacher_role != '':
+        # get data
+        teacher_role = get_dataframe(teacher_role, columns=['courseid', 'userid'])
+        # set data type
+        teacher_role['courseid'] = teacher_role['courseid'].astype('Int64')
+        teacher_role['userid'] = teacher_role['userid'].astype('Int64')
+        # assign the course teacher role by matching the course id and the user id
+        for idx in range(len(teacher_role)):
+            df.loc[(df['courseid'] == teacher_role.iloc[idx]['courseid']) &
+                   (df['userid'] == teacher_role.iloc[idx]['userid']), 'Role'] = 'Teacher'
 
-    #  assign the course non-editing teacher role by matching the course id and the user id
-    if course_non_editing_teachers != '':
-        course_non_editing_teachers = get_dataframe(course_non_editing_teachers, columns=['courseid', 'userid'])
-        for idx in range(len(course_non_editing_teachers)):
-            df.loc[(df['courseid'] == course_non_editing_teachers.iloc[idx]['courseid']) &
-                   (df['userid'] == course_non_editing_teachers.iloc[idx]['userid']), 'Role'] = 'Non-editing Teacher'
+    if non_editing_teacher_role != '':
+        # get data
+        non_editing_teacher_role = get_dataframe(non_editing_teacher_role, columns=['courseid', 'userid'])
+        # set data type
+        non_editing_teacher_role['courseid'] = non_editing_teacher_role['courseid'].astype('Int64')
+        non_editing_teacher_role['userid'] = non_editing_teacher_role['userid'].astype('Int64')
+        #  assign the course non-editing teacher role by matching the course id and the user id
+        for idx in range(len(non_editing_teacher_role)):
+            df.loc[(df['courseid'] == non_editing_teacher_role.iloc[idx]['courseid']) &
+                   (df['userid'] == non_editing_teacher_role.iloc[idx]['userid']), 'Role'] = 'Non-editing Teacher'
 
-    #  assign the course creator role to remaining records
-    if course_creators != '':
-        course_creators = get_dataframe(course_creators, columns=['roleid', 'userid'])
-        for idx in range(len(course_creators)):
-            df.loc[(df['userid'] == course_creators.iloc[idx]['userid']) &
-                   (df['Role'].isnull()), 'Role'] = 'Course creator'
+    #  assign the course creator role
+    if course_creator_role != '':
+        # get data
+        course_creator_role = get_dataframe(course_creator_role, columns=['userid'])
+        # set data type
+        course_creator_role['userid'] = course_creator_role['userid'].astype('Int64')
+        for idx in range(len(course_creator_role)):
+            df.loc[df['userid'] == course_creator_role.iloc[idx]['userid'], 'Role'] = 'Course creator'
 
-    # assign the course manager role to remaining records
-    if managers != '':
-        managers = get_dataframe(managers, columns=['roleid', 'userid'])
-        for idx in range(len(managers)):
-            df.loc[(df['userid'] == managers.iloc[idx]['userid']) &
-                   (df['Role'].isnull()), 'Role'] = 'Manager'
+    if manager_role != '':
+        # get data
+        manager_role = get_dataframe(manager_role, columns=['userid'])
+        # set data type
+        manager_role['userid'] = manager_role['userid'].astype('Int64')
+        # assign the manager role
+        for idx in range(len(manager_role)):
+            df.loc[df['userid'] == manager_role.iloc[idx]['userid'], 'Role'] = 'Manager'
 
-    # assign the admin role to remaining records
-    df.loc[df['userid'] == 2, 'Role'] = 'Admin'
+    if admin_role != '':
+        # get data
+        admin_role = get_dataframe(admin_role, columns=['value'])
+        # get userid whose role is admin
+        admin_role = admin_role['value'][0].split(',')
+        # assign the admin role
+        for idx in admin_role:
+            df.loc[df['userid'] == int(idx), 'Role'] = 'Admin'
 
     # assign the role guest to guests and users who access the course just to have a look and then unenroll
     df.loc[df['userid'] == 1, 'Role'] = 'Guest'
     df.loc[(df['Role'].isnull()) &
-           (df['Course'].notnull()) &
-           (df['User full name'] != '-'), 'Role'] = 'Guest'
+           (df['Course_Area'].notnull()) &
+           (df['Username'] != '-'), 'Role'] = 'Guest'
 
     # assign the authenticated user to left records
     df.loc[(df['Role'].isnull()) &
-           (df['User full name'] != '-'), 'Role'] = 'Authenticated user'
+           (df['Username'] != '-'), 'Role'] = 'Authenticated user'
+
+    # set data type
+    df['Role'] = df['Role'].astype('str')
 
     return df
 
@@ -292,56 +340,56 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
     """
 
     # authentication
-    df.loc[df['Event name'] == 'User has logged in', 'Course'] = 'Authentication'
-    df.loc[df['Event name'] == 'User login failed', 'Course'] = 'Authentication'
-    df.loc[df['Event name'] == 'User logged out', 'Course'] = 'Authentication'
+    df.loc[df['Event_name'] == 'User has logged in', 'Course_Area'] = 'Authentication'
+    df.loc[df['Event_name'] == 'User login failed', 'Course_Area'] = 'Authentication'
+    df.loc[df['Event_name'] == 'User logged out', 'Course_Area'] = 'Authentication'
 
     # mobile
-    df.loc[df['Event name'].str.contains('Web service'), 'Course'] = 'Mobile'
+    df.loc[df['Event_name'].str.contains('Web service'), 'Course_Area'] = 'Mobile'
 
     # overall site
-    df.loc[df['Event name'].str.contains('Dashboard'), 'Course'] = 'Overall Site'
-    df.loc[df['Event context'].str.contains('(?i)Category'), 'Course'] = 'Overall Site'
-    df.loc[df['Event name'].str.contains('(?i)Category'), 'Course'] = 'Overall Site'
-    df.loc[df['Event name'].str.contains('Calendar'), 'Course'] = 'Overall Site'
-    df.loc[df['Event name'] == 'Courses searched', 'Course'] = 'Overall Site'
-    df.loc[df['Event context'] == 'Front page', 'Course'] = 'Overall Site'
-    df.loc[df['Event context'] == 'Forum: Site announcements', 'Course'] = 'Overall Site'
-    df.loc[df['Event name'] == 'Notification viewed', 'Course'] = 'Overall Site'
-    df.loc[(df['Event name'] == 'Notification sent') &
-           (df['Affected user'] == df['User full name']), 'Course'] = 'Overall Site'
-    df.loc[(df['Event name'] == 'Blog entries viewed') &
-           (df['Affected user'] == df['User full name']), 'Course'] = 'Overall Site'
-    df.loc[(df['Event name'] == 'User report viewed') &
-           (df['Affected user'] == df['User full name']) & (df['Component'] == 'Forum'), 'Course'] = 'Overall Site'
-    df.loc[df['Event context'] == 'Forum: Site announcements', 'Course'] = 'Overall Site'
+    df.loc[df['Event_name'].str.contains('Dashboard'), 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_context'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_name'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_name'].str.contains('Calendar'), 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_name'] == 'Courses searched', 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_context'] == 'Front page', 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_context'] == 'Forum: Site announcements', 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_name'] == 'Notification viewed', 'Course_Area'] = 'Overall Site'
+    df.loc[(df['Event_name'] == 'Notification sent') &
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Overall Site'
+    df.loc[(df['Event_name'] == 'Blog entries viewed') &
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Overall Site'
+    df.loc[(df['Event_name'] == 'User report viewed') &
+           (df['Affected_user'] == df['Username']) & (df['Component'] == 'Forum'), 'Course_Area'] = 'Overall Site'
+    df.loc[df['Event_context'] == 'Forum: Site announcements', 'Course_Area'] = 'Overall Site'
 
     # profile
-    df.loc[df['Event name'].str.contains('User password'), 'Course'] = 'Profile'
-    df.loc[df['Event name'] == 'User updated', 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'User profile viewed') &
-           (df['Affected user'] == df['User full name']), 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'Badge viewed') & (df['Event context'] == 'System'), 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'Tag added to an item') &
-           (df['Event context'].str.contains('User:')), 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'Tag removed from an item') &
-           (df['Event context'].str.contains('User:')), 'Course'] = 'Profile'
-    df.loc[df['Event name'] == 'Tag created', 'Course'] = 'Profile'
-    df.loc[df['Event name'] == 'Tag deleted', 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'Course user report viewed') &
-           (df['Affected user'] == df['User full name']), 'Course'] = 'Profile'
-    df.loc[(df['Event name'] == 'Notes viewed') &
-           (df['Affected user'] == df['User full name']), 'Course'] = 'Profile'
+    df.loc[df['Event_name'].str.contains('User password'), 'Course_Area'] = 'Profile'
+    df.loc[df['Event_name'] == 'User updated', 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'User profile viewed') &
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'Badge viewed') & (df['Event_context'] == 'System'), 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'Tag added to an item') &
+           (df['Event_context'].str.contains('User:')), 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'Tag removed from an item') &
+           (df['Event_context'].str.contains('User:')), 'Course_Area'] = 'Profile'
+    df.loc[df['Event_name'] == 'Tag created', 'Course_Area'] = 'Profile'
+    df.loc[df['Event_name'] == 'Tag deleted', 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'Course user report viewed') &
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
+    df.loc[(df['Event_name'] == 'Notes viewed') &
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
 
     # social interaction
-    df.loc[(df['Event name'].str.contains('(?i)message')) &
-           (df['Component'] != 'Chat'), 'Course'] = 'Social interaction'
-    df.loc[(df['Event name'] == 'Notification sent') &
-           (df['Affected user'] != df['User full name']), 'Course'] = 'Social interaction'
-    df.loc[(df['Event name'] == 'User profile viewed') &
-           (df['Affected user'] != df['User full name']), 'Course'] = 'Social interaction'
-    df.loc[(df['Event name'] == 'Blog entries viewed') &
-           (df['Affected user'] != df['User full name']), 'Course'] = 'Social interaction'
+    df.loc[(df['Event_name'].str.contains('(?i)message')) &
+           (df['Component'] != 'Chat'), 'Course_Area'] = 'Social interaction'
+    df.loc[(df['Event_name'] == 'Notification sent') &
+           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
+    df.loc[(df['Event_name'] == 'User profile viewed') &
+           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
+    df.loc[(df['Event_name'] == 'Blog entries viewed') &
+           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
 
     return df
 
@@ -366,58 +414,58 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Component'].str.contains('(?i)submission'), 'Component'] = 'Assignment'
 
     # authentication
-    df.loc[df['Event name'] == 'User has logged in', 'Component'] = 'Login'
-    df.loc[df['Event name'] == 'User login failed', 'Component'] = 'Login'
-    df.loc[df['Event name'] == 'User logged out', 'Component'] = 'Logout'
+    df.loc[df['Event_name'] == 'User has logged in', 'Component'] = 'Login'
+    df.loc[df['Event_name'] == 'User login failed', 'Component'] = 'Login'
+    df.loc[df['Event_name'] == 'User logged out', 'Component'] = 'Logout'
 
     # backup
     df.loc[df['Component'].str.contains('backup'), 'Component'] = 'Backup'
 
     # badge
-    df.loc[df['Event name'].str.contains('Badge'), 'Component'] = 'Badge'
+    df.loc[df['Event_name'].str.contains('Badge'), 'Component'] = 'Badge'
 
     # blog
-    df.loc[df['Event name'].str.contains('Blog'), 'Component'] = 'Blog'
+    df.loc[df['Event_name'].str.contains('Blog'), 'Component'] = 'Blog'
 
     # book
     df.loc[df['Component'] == 'Book printing', 'Component'] = 'Book'
 
     # calendar
-    df.loc[df['Event name'].str.contains('Calendar'), 'Component'] = 'Calendar'
+    df.loc[df['Event_name'].str.contains('Calendar'), 'Component'] = 'Calendar'
 
     # capability
-    df.loc[df['Event name'].str.contains('Capability'), 'Component'] = 'Capability'
+    df.loc[df['Event_name'].str.contains('Capability'), 'Component'] = 'Capability'
 
     # course activity completion updated
-    ccu = list(df.loc[df['Event name'] == 'Course activity completion updated'].index)
+    ccu = list(df.loc[df['Event_name'] == 'Course activity completion updated'].index)
     for idx in ccu:
-        df.loc[idx, 'Component'] = df.loc[idx, 'Event context'].split(':')[0]
+        df.loc[idx, 'Component'] = df.loc[idx, 'Event_context'].split(':')[0]
 
     # course home
-    df.loc[df['Event name'].str.contains('Course section'), 'Component'] = 'Course home'
-    df.loc[(df['Event context'].str.contains('Course')) &
-           (df['Event name'] == 'Course viewed'), 'Component'] = 'Course home'
+    df.loc[df['Event_name'].str.contains('Course section'), 'Component'] = 'Course home'
+    df.loc[(df['Event_context'].str.contains('Course_Area')) &
+           (df['Event_name'] == 'Course viewed'), 'Component'] = 'Course home'
 
     # course module created
-    cmc = list(df.loc[df['Event name'] == 'Course module created'].index)
+    cmc = list(df.loc[df['Event_name'] == 'Course module created'].index)
     for idx in cmc:
-        df.loc[idx, 'Component'] = df.loc[idx, 'Event context'].split(':')[0]
+        df.loc[idx, 'Component'] = df.loc[idx, 'Event_context'].split(':')[0]
 
     # course module updated
-    cmu = list(df.loc[df['Event name'] == 'Course module updated'].index)
+    cmu = list(df.loc[df['Event_name'] == 'Course module updated'].index)
     for idx in cmu:
-        df.loc[idx, 'Component'] = df.loc[idx, 'Event context'].split(':')[0]
+        df.loc[idx, 'Component'] = df.loc[idx, 'Event_context'].split(':')[0]
 
     # courses list
-    df.loc[df['Event name'] == 'Category viewed', 'Component'] = 'Courses list'
-    df.loc[df['Event name'] == 'Courses searched', 'Component'] = 'Courses list'
+    df.loc[df['Event_name'] == 'Category viewed', 'Component'] = 'Courses list'
+    df.loc[df['Event_name'] == 'Courses searched', 'Component'] = 'Courses list'
 
     # dashboard
-    df.loc[df['Event name'].str.contains('Dashboard'), 'Component'] = 'Dashboard'
+    df.loc[df['Event_name'].str.contains('Dashboard'), 'Component'] = 'Dashboard'
 
     # enrollment
-    df.loc[df['Event name'] == 'User enrolled in course', 'Component'] = 'Enrollment'
-    df.loc[df['Event name'] == 'User unenrolled from course', 'Component'] = 'Enrollment'
+    df.loc[df['Event_name'] == 'User enrolled in course', 'Component'] = 'Enrollment'
+    df.loc[df['Event_name'] == 'User unenrolled from course', 'Component'] = 'Enrollment'
 
     # grade-book
     df.loc[df['Component'] == 'Single view', 'Component'] = 'Gradebook'
@@ -425,55 +473,55 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Component'] == 'OpenDocument spreadsheet', 'Component'] = 'Gradebook'
     df.loc[df['Component'] == 'Grader report', 'Component'] = 'Gradebook'
     df.loc[df['Component'] == 'Outcomes report', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'User graded', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'Grade item updated', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'Grade deleted', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'Grade item created', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'Scale created', 'Component'] = 'Gradebook'
-    df.loc[df['Event name'] == 'Scale deleted', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'User graded', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'Grade item updated', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'Grade deleted', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'Grade item created', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'Scale created', 'Component'] = 'Gradebook'
+    df.loc[df['Event_name'] == 'Scale deleted', 'Component'] = 'Gradebook'
 
     # grades
-    df.loc[df['Event name'] == 'Grade overview report viewed', 'Component'] = 'Grades'
-    df.loc[df['Event name'] == 'Course user report viewed', 'Component'] = 'Grades'
+    df.loc[df['Event_name'] == 'Grade overview report viewed', 'Component'] = 'Grades'
+    df.loc[df['Event_name'] == 'Course user report viewed', 'Component'] = 'Grades'
     df.loc[df['Component'] == 'User report', 'Component'] = 'Grades'
 
     # groups
-    df.loc[(df['Event name'].str.contains('Group|Grouping')) &
-           (df['Event name'] != 'Group message sent'), 'Component'] = 'Groups'
+    df.loc[(df['Event_name'].str.contains('Group|Grouping')) &
+           (df['Event_name'] != 'Group message sent'), 'Component'] = 'Groups'
 
     # h5p
     df.loc[df['Component'] == 'H5P Package', 'Component'] = 'H5P'
-    df.loc[(df['Event name'].str.contains('Content')) & (df['Component'] == 'System'), 'Component'] = 'H5P'
+    df.loc[(df['Event_name'].str.contains('Content')) & (df['Component'] == 'System'), 'Component'] = 'H5P'
 
     # messaging
-    df.loc[(df['Event name'].str.contains('(?i)Message')) & (df['Component'] == 'System'), 'Component'] = 'Messaging'
-    df.loc[(df['Event name'] == 'Notification sent') &
-           (df['Affected user'] != df['User full name']), 'Component'] = 'Messaging'
-    mca = list(df.loc[df['Event name'] == 'Message contact added'].index)
+    df.loc[(df['Event_name'].str.contains('(?i)Message')) & (df['Component'] == 'System'), 'Component'] = 'Messaging'
+    df.loc[(df['Event_name'] == 'Notification sent') &
+           (df['Affected_user'] != df['Username']), 'Component'] = 'Messaging'
+    mca = list(df.loc[df['Event_name'] == 'Message contact added'].index)
     for idx in mca:
-        # invert user full name with affected user
-        df.loc[idx, ['User full name', 'Affected user']] = df.loc[idx, ['Affected user', 'User full name']].values
+        # invert username with affected user
+        df.loc[idx, ['Username', 'Affected_user']] = df.loc[idx, ['Affected_user', 'Username']].values
 
     # notes
-    df.loc[(df['Event name'].str.contains('(?i)Notes')) & (df['Component'] == 'System'), 'Component'] = 'Notes'
+    df.loc[(df['Event_name'].str.contains('(?i)Notes')) & (df['Component'] == 'System'), 'Component'] = 'Notes'
 
     # notification
-    df.loc[df['Event name'] == 'Notification viewed', 'Component'] = 'Notification'
-    df.loc[df['Event name'] == 'Notification sent', 'Component'] = 'Notification'
+    df.loc[df['Event_name'] == 'Notification viewed', 'Component'] = 'Notification'
+    df.loc[df['Event_name'] == 'Notification sent', 'Component'] = 'Notification'
 
     # profile participant
-    df.loc[df['Event name'] == 'User list viewed', 'Component'] = 'Participant profile'
-    df.loc[(df['Event name'] == 'User profile viewed') &
-           (df['User full name'] != df['Affected user']), 'Component'] = 'Participant profile'
+    df.loc[df['Event_name'] == 'User list viewed', 'Component'] = 'Participant profile'
+    df.loc[(df['Event_name'] == 'User profile viewed') &
+           (df['Username'] != df['Affected_user']), 'Component'] = 'Participant profile'
 
     # profile user
-    df.loc[df['Event name'] == 'User password updated', 'Component'] = 'User profile'
-    df.loc[df['Event name'] == 'User updated', 'Component'] = 'User profile'
-    df.loc[(df['Event name'] == 'User profile viewed') &
-           (df['User full name'] == df['Affected user']), 'Component'] = 'User profile'
+    df.loc[df['Event_name'] == 'User password updated', 'Component'] = 'User profile'
+    df.loc[df['Event_name'] == 'User updated', 'Component'] = 'User profile'
+    df.loc[(df['Event_name'] == 'User profile viewed') &
+           (df['Username'] == df['Affected_user']), 'Component'] = 'User profile'
 
     # quiz
-    df.loc[(df['Event name'].str.contains('Question')) & (df['Component'] == 'System'), 'Component'] = 'Quiz'
+    df.loc[(df['Event_name'].str.contains('Question')) & (df['Component'] == 'System'), 'Component'] = 'Quiz'
 
     # report
     df.loc[df['Component'] == 'Course participation', 'Component'] = 'Report'
@@ -481,15 +529,36 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Component'] == 'Statistics', 'Component'] = 'Report'
 
     # role
-    df.loc[df['Event name'].str.contains('Role'), 'Component'] = 'Role'
+    df.loc[df['Event_name'].str.contains('Role'), 'Component'] = 'Role'
 
     # tag
-    df.loc[(df['Event name'].str.contains('Tag')), 'Component'] = 'Tag'
+    df.loc[(df['Event_name'].str.contains('Tag')), 'Component'] = 'Tag'
 
     # site home
-    df.loc[(df['Event context'] == 'Front page') & (df['Event name'] == 'Course viewed'), 'Component'] = 'Site home'
+    df.loc[(df['Event_context'] == 'Front page') & (df['Event_name'] == 'Course viewed'), 'Component'] = 'Site home'
 
     # web service
-    df.loc[df['Course'] == 'Mobile', 'Component'] = 'Web service'
+    df.loc[df['Course_Area'] == 'Mobile', 'Component'] = 'Web service'
+
+    return df
+
+
+def identify_deleted_modules(df: DataFrame) -> DataFrame:
+    """
+    Identify actions performed on deleted modules
+
+    Args:
+        df: The dataframe object.
+
+    Returns:
+        The dataframe with the type values for the deleted modules.
+
+    """
+
+    df.loc[df['Event_context'] == 'Other', 'Type'] = 'Deleted'
+    df.loc[df['Type'].isnull(), 'Type'] = 'Available'
+
+    # set data type
+    df['Type'] = df['Type'].astype('str')
 
     return df
