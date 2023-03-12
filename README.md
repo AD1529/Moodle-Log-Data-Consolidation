@@ -72,7 +72,7 @@ According to your needs, you can modify *get_consolidated_data* function call.
 If you want to get more fields, modify the variable *columns*.
 
 
-## Get consolidated course data
+## Get course data
 Once the data has been consolidated, you can extract data from specific courses.
 
 ### Get specific data
