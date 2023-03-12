@@ -112,7 +112,7 @@ from src.paths import course_dates_path
 # GET DATA
 # ------------
 # get the consolidated dataframe
-df_path = '../datasets/df_consolidated.csv'
+df_path = 'datasets/df_consolidated.csv'
 df = pd.read_csv(df_path)
 
 # create a Records object to use its methods
