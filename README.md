@@ -129,8 +129,8 @@ course_B = ex.extract_records(records, year=[2021], username=['Student 01'])
 # CLEAN THE DATASET
 # -----------------
 # you can either clean the entire dataset or each course individually
-# records = cl.clean_records(records)
-course_A = cl.clean_records(course_A)
+# records = cl.clean_specific_records(records)
+course_A = cl.clean_specific_records(course_A)
 ```
 
 ## License
