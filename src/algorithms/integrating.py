@@ -443,7 +443,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
 
     # course home
     df.loc[df['Event_name'].str.contains('Course section'), 'Component'] = 'Course home'
-    df.loc[(df['Event_context'].str.contains('Course_Area')) &
+    df.loc[(df['Event_context'].str.contains('Course:')) &
            (df['Event_name'] == 'Course viewed'), 'Component'] = 'Course home'
 
     # course module created
