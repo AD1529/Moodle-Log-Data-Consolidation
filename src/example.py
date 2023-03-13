@@ -19,7 +19,7 @@ records = Records(df)
 # ----------------------
 # select specific attributes to get the desired values
 course_A = ex.extract_records(records, course_area=['Course_A'], role=['Student'], course_dates=course_dates_path)
-course_B = ex.extract_records(records, year=[2021], username=['Student 01'])
+course_B = ex.extract_records(records, year=[2021], username=['User 43'])
 
 # -----------------
 # CLEAN THE DATASET

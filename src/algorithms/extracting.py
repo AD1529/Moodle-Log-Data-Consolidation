@@ -4,7 +4,6 @@ from pandas import DataFrame
 
 
 def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], years: [int]):
-
     """
     Remove values that don't fall within the start and end dates of the course.
 
@@ -58,9 +57,9 @@ def extract_records(records: Records,
             Year of the course/area.
         course_area: list of str,
             Course(s) or area(s) of the platform.
-        role: str,
+        role: list of str,
             'Student', 'Teacher', 'Manager', etc.
-        username: str,
+        username: list of str,
             The username of the user.
         course_dates: str,
             The path of the data extracted from the database.

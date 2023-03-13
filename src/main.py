@@ -36,7 +36,7 @@ def get_consolidated_data(platform_logs: str or DataFrame,
         manager_role: str, optional
             The path to manager data.
         admin_role: str, optional
-            The path to manager data.
+            The path to admin data.
         deleted_users: str, optional
             The path to deleted users data.
         directory:  str, optional

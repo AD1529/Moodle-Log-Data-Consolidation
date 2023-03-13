@@ -145,7 +145,7 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
            FROM mdl_course
 
     Args:
-        df: The joined dataframe.
+        df: The dataframe object.
         course_names: str,
             The path of the data extracted from the database.
 
@@ -199,7 +199,7 @@ def add_role(df: DataFrame,
              admin_role: str = '') -> DataFrame:
 
     """
-    Add the roles to the dataframe.
+    Add roles to the dataframe.
 
     A role is a collection of permissions defined for the whole system that can be assigned to specific users in
     specific contexts. When a user logs in, they are considered "authenticated." Users can be teachers or students
@@ -311,7 +311,7 @@ def add_role(df: DataFrame,
         for idx in admin_role:
             df.loc[df['userid'] == int(idx), 'Role'] = 'Admin'
 
-    # assign the role guest to guests and users who access the course just to have a look and then unenroll
+    # assign the role 'guest' to guests and users who access the course just to have a look and then unenroll
     df.loc[df['userid'] == 1, 'Role'] = 'Guest'
     df.loc[(df['Role'].isnull()) &
            (df['Course_Area'].notnull()) &

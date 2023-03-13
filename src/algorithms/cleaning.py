@@ -7,7 +7,7 @@ def remove_admin_cron_guest_records(df: DataFrame) -> DataFrame:
     """
     Remove admin, cron and guest activities.
     ‘Restore’: typically teachers and managers activities related to role permission.
-    ‘CLI’: events triggered by a CLI script unrelated to user action
+    ‘CLI’: events triggered by a CLI script unrelated to user action.
     '-': cron jobs.
 
     Args:
@@ -23,7 +23,7 @@ def remove_admin_cron_guest_records(df: DataFrame) -> DataFrame:
     cli = list((df.loc[df['Origin'] == 'cli']).index)
     restore = list((df.loc[df['Origin'] == 'restore']).index)
     guest = list((df.loc[df['Role'] == 'Guest']).index)
-    login_as = list(df.loc[df['Username'].str.contains(' as ')].loc[df['Event_context'] == 'Other'].index)
+    login_as = list(df.loc[df['Username'].str.contains(' as ')].index)
 
     # drop records
     to_remove = admin + cron + cli + restore + guest + login_as
@@ -65,10 +65,10 @@ def remove_deleted_users(df: DataFrame, deleted_users: str) -> DataFrame:
 
 def clean_dataset_records(df: DataFrame) -> DataFrame:
     """
-    Remove unnecessary data. Here we list logs that usually do not involve any user actions or are not related to
+    Remove unnecessary data. Here are listed logs that usually do not involve any user actions or are not related to
     learning activities. Moreover, some user logs may be gathered for deleted courses or for courses not listed in the
     course_shortnames file (because you do not want to analyse them). When attempting to match the course id and
-    shortname, they are not be matched and the course/area field will be empty. This function is customisable according
+    shortname, they are not matched and the course/area field will be empty. This function is customisable according
     to specific needs.
 
     Please be aware that if you deal with time, and you calculate the duration as the interval between two
@@ -113,7 +113,7 @@ def clean_dataset_records(df: DataFrame) -> DataFrame:
 
 def clean_specific_records(records: Records) -> Records:
     """
-    This function removes specific records. This function is customisable according to specific needs.
+    This function removes specific records and is customisable according to your needs.
 
     Args:
         records (object): The Records object.
@@ -128,7 +128,6 @@ def clean_specific_records(records: Records) -> Records:
 
     # dataset specific
     xp = list((df.loc[df['Component'] == 'Level Up XP']).index)
-    wooclap = list((df.loc[df['Component'] == 'Wooclap']).index)
     chat = list((df.loc[df['Component'] == 'Chat']).index)
     reservation = list((df.loc[df['Component'] == 'Reservation']).index)
     activity_completion = list((df.loc[df['Event_name'] == 'Course activity completion updated']).index)
