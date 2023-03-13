@@ -128,6 +128,7 @@ def clean_specific_records(records: Records) -> Records:
 
     # dataset specific
     xp = list((df.loc[df['Component'] == 'Level Up XP']).index)
+    wooclap = list((df.loc[df['Component'] == 'Wooclap']).index)
     chat = list((df.loc[df['Component'] == 'Chat']).index)
     reservation = list((df.loc[df['Component'] == 'Reservation']).index)
     activity_completion = list((df.loc[df['Event_name'] == 'Course activity completion updated']).index)
