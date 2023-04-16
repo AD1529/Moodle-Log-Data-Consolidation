@@ -107,7 +107,7 @@ import src.algorithms.cleaning as cl
 import src.algorithms.extracting as ex
 import pandas as pd
 from src.paths import course_dates_path
-
+```
 # ------------
 # GET DATA
 # ------------
