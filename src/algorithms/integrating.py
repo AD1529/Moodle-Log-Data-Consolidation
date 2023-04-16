@@ -348,7 +348,6 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
     df.loc[df['Event_name'].str.contains('Web service'), 'Course_Area'] = 'Mobile'
 
     # overall site
-    df.loc[df['Event_name'].str.contains('Dashboard'), 'Course_Area'] = 'Overall Site'
     df.loc[df['Event_context'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
     df.loc[df['Event_name'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
     df.loc[df['Event_name'].str.contains('Calendar'), 'Course_Area'] = 'Overall Site'
@@ -365,6 +364,7 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
     df.loc[df['Event_context'] == 'Forum: Site announcements', 'Course_Area'] = 'Overall Site'
 
     # profile
+    df.loc[df['Event_name'].str.contains('Dashboard'), 'Course_Area'] = 'Profile'
     df.loc[df['Event_name'].str.contains('User password'), 'Course_Area'] = 'Profile'
     df.loc[df['Event_name'] == 'User updated', 'Course_Area'] = 'Profile'
     df.loc[(df['Event_name'] == 'User profile viewed') &
