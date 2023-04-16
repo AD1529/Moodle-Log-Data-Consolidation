@@ -108,6 +108,7 @@ import src.algorithms.extracting as ex
 import pandas as pd
 from src.paths import course_dates_path
 
+
 # ------------
 # GET DATA
 # ------------
@@ -152,6 +153,7 @@ If you use the library in an academic setting, please cite the following papers:
 ```
 > Rotelli, Daniela, and Anna Monreale. "Processing and Understanding Moodle Log Data and their Temporal Dimension", Journal of Learning Analytics, 2023
 
+```tex
 @article{rotelli2023processing,
   title={Processing and Understanding Moodle Log Data and their Temporal Dimension},
   author={Rotelli, Daniela and Monreale, Anna},
