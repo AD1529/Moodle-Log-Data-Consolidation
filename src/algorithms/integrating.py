@@ -386,8 +386,6 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
            (df['Component'] != 'Chat'), 'Course_Area'] = 'Social interaction'
     df.loc[(df['Event_name'] == 'Notification sent') &
            (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
-    df.loc[(df['Event_name'] == 'User profile viewed') &
-           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
     df.loc[(df['Event_name'] == 'Blog entries viewed') &
            (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
 
@@ -506,8 +504,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[(df['Event_name'].str.contains('(?i)Notes')) & (df['Component'] == 'System'), 'Component'] = 'Notes'
 
     # notification
-    df.loc[df['Event_name'] == 'Notification viewed', 'Component'] = 'Notification'
-    df.loc[df['Event_name'] == 'Notification sent', 'Component'] = 'Notification'
+    df.loc[df['Event_name'].str.contains('Notification'), 'Component'] = 'Notification'
 
     # profile participant
     df.loc[df['Event_name'] == 'User list viewed', 'Component'] = 'Participant profile'
