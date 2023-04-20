@@ -1,5 +1,0 @@
-- platform logs
-- database data
-- roles
-- course shortnames
-- deleted users

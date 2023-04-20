@@ -35,9 +35,8 @@ def get_dataframe(file_path: str, columns: [] = None) -> DataFrame:
 
 def collect_user_logs(directory_path: str) -> DataFrame:
     """
-    It is possible to choose specific users (within one or more courses) and download their logs if the memory size
-    of the Moodle platform does not permit the download of the entire set of logs. Then, a directory should contain all
-    files.
+    It is possible to choose specific users (within one or more courses) and download their logs. Then, a directory
+    should contain all related files.
 
     Args:
         directory_path: str,
@@ -129,7 +128,7 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
     # rename the dataframe columns
     joined_logs = tr.rename_columns(joined_logs)
     # set data type for further analysis
-    joined_logs = tr.set_data_types(joined_logs)
+    #joined_logs = tr.set_data_types(joined_logs)
 
     return joined_logs
 
@@ -163,9 +162,6 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
     for shortname in shortnames:
         courseid = course_names.loc[course_names['shortname'] == shortname]['id'].values[0]
         df.loc[df['courseid'] == courseid, 'Course_Area'] = shortname
-
-    # set data type
-    df['Course_Area'] = df['Course_Area'].astype('str')
 
     return df
 
@@ -311,23 +307,20 @@ def add_role(df: DataFrame,
         for idx in admin_role:
             df.loc[df['userid'] == int(idx), 'Role'] = 'Admin'
 
+    # assign the authenticated user to left records
+    df.loc[(df['Role'].isnull()) &
+           (df['Username'] != '-'), 'Role'] = 'Authenticated user'
+
     # assign the role 'guest' to guests and users who access the course just to have a look and then unenroll
     df.loc[df['userid'] == 1, 'Role'] = 'Guest'
     df.loc[(df['Role'].isnull()) &
            (df['Course_Area'].notnull()) &
            (df['Username'] != '-'), 'Role'] = 'Guest'
 
-    # assign the authenticated user to left records
-    df.loc[(df['Role'].isnull()) &
-           (df['Username'] != '-'), 'Role'] = 'Authenticated user'
-
-    # set data type
-    df['Role'] = df['Role'].astype('str')
-
     return df
 
 
-def course_area_categorisation(df: DataFrame) -> DataFrame:
+def redefine_course_area(df: DataFrame) -> DataFrame:
     """
     Add the area to those records that do not belong to any field and have a missing value.
 
@@ -347,52 +340,56 @@ def course_area_categorisation(df: DataFrame) -> DataFrame:
     # mobile
     df.loc[df['Event_name'].str.contains('Web service'), 'Course_Area'] = 'Mobile'
 
-    # overall site
-    df.loc[df['Event_context'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_name'].str.contains('(?i)Category'), 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_name'].str.contains('Calendar'), 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_name'] == 'Courses searched', 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_context'] == 'Front page', 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_context'] == 'Forum: Site announcements', 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_name'] == 'Notification viewed', 'Course_Area'] = 'Overall Site'
-    df.loc[(df['Event_name'] == 'Notification sent') &
-           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Overall Site'
+    # moodle site
+    df.loc[(df['Event_name'] == 'Course module instance list viewed') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'Course module viewed') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'Course viewed') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'].str.contains('(?i)subscription')) &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'] == 'Courses searched', 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'].str.contains('Discussion') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'] == 'Notification viewed', 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'].str.contains('(?i)category') &
+           (df.courseid == 0), 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'].str.contains('Calendar'), 'Course_Area'] = 'Moodle Site'
     df.loc[(df['Event_name'] == 'Blog entries viewed') &
-           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Overall Site'
-    df.loc[(df['Event_name'] == 'User report viewed') &
-           (df['Affected_user'] == df['Username']) & (df['Component'] == 'Forum'), 'Course_Area'] = 'Overall Site'
-    df.loc[df['Event_context'] == 'Forum: Site announcements', 'Course_Area'] = 'Overall Site'
+           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Moodle Site'
+    df.loc[df['Event_name'].str.contains('Role') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'User report viewed') & (df.courseid == 0), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'Insights viewed') &
+           (df.courseid == 0), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'User created'), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'User deleted'), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'].str.contains('post')) &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
 
     # profile
+    df.loc[(df['Event_name'] == 'Badge viewed') & (df['courseid'] == 0), 'Course_Area'] = 'Profile'
     df.loc[df['Event_name'].str.contains('Dashboard'), 'Course_Area'] = 'Profile'
     df.loc[df['Event_name'].str.contains('User password'), 'Course_Area'] = 'Profile'
     df.loc[df['Event_name'] == 'User updated', 'Course_Area'] = 'Profile'
     df.loc[(df['Event_name'] == 'User profile viewed') &
            (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
-    df.loc[(df['Event_name'] == 'Badge viewed') & (df['Event_context'] == 'System'), 'Course_Area'] = 'Profile'
-    df.loc[(df['Event_name'] == 'Tag added to an item') &
-           (df['Event_context'].str.contains('User:')), 'Course_Area'] = 'Profile'
-    df.loc[(df['Event_name'] == 'Tag removed from an item') &
-           (df['Event_context'].str.contains('User:')), 'Course_Area'] = 'Profile'
-    df.loc[df['Event_name'] == 'Tag created', 'Course_Area'] = 'Profile'
-    df.loc[df['Event_name'] == 'Tag deleted', 'Course_Area'] = 'Profile'
+    df.loc[df['Event_name'].str.contains('(?i)tag') &
+           (df.courseid == 0), 'Course_Area'] = 'Profile'
     df.loc[(df['Event_name'] == 'Course user report viewed') &
-           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
-    df.loc[(df['Event_name'] == 'Notes viewed') &
-           (df['Affected_user'] == df['Username']), 'Course_Area'] = 'Profile'
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
 
     # social interaction
     df.loc[(df['Event_name'].str.contains('(?i)message')) &
            (df['Component'] != 'Chat'), 'Course_Area'] = 'Social interaction'
-    df.loc[(df['Event_name'] == 'Notification sent') &
-           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
     df.loc[(df['Event_name'] == 'Blog entries viewed') &
            (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
 
     return df
 
 
-def component_redefinition(df: DataFrame) -> DataFrame:
+def redefine_component(df: DataFrame) -> DataFrame:
     """
     The component field can be labelled with the 'System' value even though the log is clearly generated when the user
     is performing an action on a specific module. Sometimes some records are recorded on different components even
@@ -415,9 +412,6 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Event_name'] == 'User has logged in', 'Component'] = 'Login'
     df.loc[df['Event_name'] == 'User login failed', 'Component'] = 'Login'
     df.loc[df['Event_name'] == 'User logged out', 'Component'] = 'Logout'
-
-    # backup
-    df.loc[df['Component'].str.contains('backup'), 'Component'] = 'Backup'
 
     # badge
     df.loc[df['Event_name'].str.contains('Badge'), 'Component'] = 'Badge'
@@ -462,8 +456,8 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Event_name'].str.contains('Dashboard'), 'Component'] = 'Dashboard'
 
     # enrollment
-    df.loc[df['Event_name'] == 'User enrolled in course', 'Component'] = 'Enrollment'
-    df.loc[df['Event_name'] == 'User unenrolled from course', 'Component'] = 'Enrollment'
+    df.loc[df['Event_name'] == 'User enrolled in course', 'Component'] = 'Enrolment'
+    df.loc[df['Event_name'] == 'User unenrolled from course', 'Component'] = 'Enrolment'
 
     # grade-book
     df.loc[df['Component'] == 'Single view', 'Component'] = 'Gradebook'
@@ -479,7 +473,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Event_name'] == 'Scale deleted', 'Component'] = 'Gradebook'
 
     # grades
-    df.loc[df['Event_name'] == 'Grade overview report viewed', 'Component'] = 'Grades'
+    df.loc[df['Event_name'] == 'Grade overview report viewed', 'Component'] = 'Grades' #TODO check area
     df.loc[df['Event_name'] == 'Course user report viewed', 'Component'] = 'Grades'
     df.loc[df['Component'] == 'User report', 'Component'] = 'Grades'
 
@@ -492,9 +486,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[(df['Event_name'].str.contains('Content')) & (df['Component'] == 'System'), 'Component'] = 'H5P'
 
     # messaging
-    df.loc[(df['Event_name'].str.contains('(?i)Message')) & (df['Component'] == 'System'), 'Component'] = 'Messaging'
-    df.loc[(df['Event_name'] == 'Notification sent') &
-           (df['Affected_user'] != df['Username']), 'Component'] = 'Messaging'
+    df.loc[(df['Event_name'].str.contains('(?i)message')) & (df['Component'] == 'System'), 'Component'] = 'Messaging'
     mca = list(df.loc[df['Event_name'] == 'Message contact added'].index)
     for idx in mca:
         # invert username with affected user
@@ -524,6 +516,7 @@ def component_redefinition(df: DataFrame) -> DataFrame:
     df.loc[df['Component'] == 'Course participation', 'Component'] = 'Report'
     df.loc[df['Component'] == 'Activity report', 'Component'] = 'Report'
     df.loc[df['Component'] == 'Statistics', 'Component'] = 'Report'
+    df.loc[df['Component'] == 'Insights viewed', 'Component'] = 'Report'
 
     # role
     df.loc[df['Event_name'].str.contains('Role'), 'Component'] = 'Role'
@@ -554,8 +547,5 @@ def identify_deleted_modules(df: DataFrame) -> DataFrame:
 
     df.loc[df['Event_context'] == 'Other', 'Type'] = 'Deleted'
     df.loc[df['Type'].isnull(), 'Type'] = 'Available'
-
-    # set data type
-    df['Type'] = df['Type'].astype('str')
 
     return df

@@ -63,23 +63,23 @@ def get_consolidated_data(platform_logs: str or DataFrame,
     joined_logs = it.add_role(joined_logs, student_role, teacher_role, non_editing_teacher_role,
                               course_creator_role, manager_role, admin_role)
     # add the area to platform logs
-    joined_logs = it.course_area_categorisation(joined_logs)
+    joined_logs = it.redefine_course_area(joined_logs)
     # redefine components
-    joined_logs = it.component_redefinition(joined_logs)
+    joined_logs = it.redefine_component(joined_logs)
     # identify actions on deleted modules
     joined_logs = it.identify_deleted_modules(joined_logs)
 
     # --------------------
     # DATA TRANSFORMATION
     # --------------------
-    # convert the timestamps in a human-readable format
+    # convert the timestamps to human-readable format
     joined_logs = tr.make_timestamp_readable(joined_logs)
 
     # --------------------
     # DATA CLEANING
     # --------------------
-    # remove admin, cron, and guest records
-    joined_logs = cl.remove_admin_cron_guest_records(joined_logs)
+    # remove automatic events
+    joined_logs = cl.clean_automatic_events(joined_logs)
     # remove deleted users if any
     joined_logs = cl.remove_deleted_users(joined_logs, deleted_users)
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                                deleted_users=deleted_users_path)
 
     # remove useless data from the entire dataset
-    df = cl.clean_dataset_records(df)
+    # df = cl.clean_dataset_records(df)
 
     # you can save the dataset for further analysis
-    df.to_csv('datasets/df_consolidated.csv')
+    # df.to_csv('datasets/df_consolidated.csv')
