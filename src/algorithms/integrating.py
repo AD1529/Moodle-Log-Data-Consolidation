@@ -9,14 +9,11 @@ def get_dataframe(file_path: str, columns: [] = None) -> DataFrame:
     Read the dataframe and add columns if missing.
 
     Args:
-        file_path: str,
-            The path of the dataframe object.
-        columns: list,
-            The list of column names.
+        file_path: The path of the dataframe object.
+        columns: The list of column names.
 
     Returns:
         The dataframe with column names.
-
     """
 
     df = pd.read_csv(file_path, sep=',')
@@ -39,12 +36,10 @@ def collect_user_logs(directory_path: str) -> DataFrame:
     should contain all related files.
 
     Args:
-        directory_path: str,
-            the path of the directory that contains all the logs files.
+        directory_path: The path of the directory that contains all the logs files.
 
     Returns:
         The dataframe containing the logs of the selected students.
-
     """
 
     global_table = pd.DataFrame()
@@ -63,12 +58,12 @@ def collect_user_logs(directory_path: str) -> DataFrame:
 
 def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
     """
-    First collect the site logs extracted from the Moodle log generation interface that is available in every Moodle
-    platform (https://your_moodle_site/report/log/index.php?id=0), then the database logs extracted from the table
+    First collect the site logs extracted from the Moodle log generation interface
+     (https://your_moodle_site/report/log/index.php?id=0), then the database logs extracted from the table
     'mdl_logstore_standard_log'.
     Timestamps are reversed since the first log identifies the first action recorded, whereas the first log extracted
     from Moodle log generation interface represents the last action. Some values may not be merged because the lengths
-    of the two files may not be equal (some logs can be missed if you download the two files one after the other) ,
+    of the two files may not be equal (some logs can be missed if you download the two files one after the other),
     thus they must be aligned. You can either use the dataframe or a filepath.
     Please note that if you want to select specific users, the query for the extraction of database data must be
     filtered with their specific userid.
@@ -89,8 +84,7 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
             database_logs columns: ['id', 'userid', 'courseid', 'relateduserid', 'timecreated']
 
     Returns:
-        The dataset that integrates platform and database logs.
-
+        The dataframe that integrates platform and database logs.
     """
 
     if isinstance(platform, str):
@@ -127,8 +121,6 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
 
     # rename the dataframe columns
     joined_logs = tr.rename_columns(joined_logs)
-    # set data type for further analysis
-    #joined_logs = tr.set_data_types(joined_logs)
 
     return joined_logs
 
@@ -140,8 +132,9 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
     want to retrieve data only for specific courses, you can list them in the course names file (with the corresponding
     id). Data belonging to other courses will be removed during cleaning.
 
-    Query: SELECT id, shortname (or fullname)
-           FROM mdl_course
+    Query to extract shortnames:
+        SELECT id, shortname (or fullname)
+        FROM mdl_course
 
     Args:
         df: The dataframe object.
@@ -149,9 +142,9 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
             The path of the data extracted from the database.
 
     Returns:
-        The dataframe with the field shortname.
-
+        The dataframe with the shortname field.
     """
+
     # get data
     course_names = get_dataframe(course_names, columns=['id', 'shortname'])
     # set data type
@@ -169,13 +162,6 @@ def add_course_shortname(df: DataFrame, course_names: str) -> DataFrame:
 def add_year(df: DataFrame) -> DataFrame:
     """
     Add the field year to the dataframe.
-
-    Args:
-        df: The dataframe object.
-
-    Returns:
-        The joined dataframe with the year field.
-
     """
 
     df['Year'] = df['Time'].map(lambda x: int(x.split('/')[2].split(',')[0]) + 2000)
@@ -186,150 +172,10 @@ def add_year(df: DataFrame) -> DataFrame:
     return df
 
 
-def add_role(df: DataFrame,
-             student_role: str,
-             teacher_role: str = '',
-             non_editing_teacher_role: str = '',
-             course_creator_role: str = '',
-             manager_role: str = '',
-             admin_role: str = '') -> DataFrame:
-
-    """
-    Add roles to the dataframe.
-
-    A role is a collection of permissions defined for the whole system that can be assigned to specific users in
-    specific contexts. When a user logs in, they are considered "authenticated." Users can be teachers or students
-    only within a course. A user can have multiple roles, representing as both a teacher and a student in different
-    courses. The complete list of roles is available at the page: your_moodle_site/admin/roles/manage.php. This
-    function can be extended according to specific requirements.
-
-    Please be aware that any system roles (suche as admin, manager, course-creator, or specifically created role) apply
-    to the assigned users throughout the entire system, including the front page and all the courses. A user can be a
-    teacher in a course and a student in another course. A manager can only be a manager.
-
-    Query for student, teacher, and non-editing teacher:
-        SELECT cx.instanceid as courseid, u.id as userid
-        FROM mdl_course c LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid
-        LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '???' AND cx.instanceid <> 1
-        LEFT OUTER JOIN mdl_user u ON ra.userid = u.id Where cx.contextlevel = '50'
-
-    Query for manager and course creator:
-        SELECT distinct userid
-        FROM mdl_role_assignments
-        WHERE roleid = '???'
-
-    Query for admin:
-        SELECT value
-        FROM mdl_config
-        WHERE name = 'siteadmins'
-
-    Args:
-        df: the joined dataframe.
-        student_role: str,
-            The path of the data extracted from database.
-            role id = 5, this field is mandatory
-        teacher_role: str,
-            The path of the data extracted from database.
-            role id = 3
-        non_editing_teacher_role: str,
-            The path of the data extracted from database.
-            role id = 4
-        course_creator_role: str,
-            The path of the data extracted from database.
-            role id = 2
-        manager_role: str,
-            The path of the data extracted from database.
-            role id = 1
-        admin_role: str,
-            The path of the data extracted from database.
-
-    Returns:
-        The joined dataframe with the role integration.
-
-    """
-
-    # get data
-    student_role = get_dataframe(student_role, columns=['courseid', 'userid'])
-    # set data type
-    student_role['courseid'] = student_role['courseid'].astype('Int64')
-    student_role['userid'] = student_role['userid'].astype('Int64')
-    # assign the course student role by matching the course id and the user id
-    for idx in range(len(student_role)):
-        df.loc[(df['courseid'] == student_role.iloc[idx]['courseid']) &
-               (df['userid'] == student_role.iloc[idx]['userid']), 'Role'] = 'Student'
-
-    if teacher_role != '':
-        # get data
-        teacher_role = get_dataframe(teacher_role, columns=['courseid', 'userid'])
-        # set data type
-        teacher_role['courseid'] = teacher_role['courseid'].astype('Int64')
-        teacher_role['userid'] = teacher_role['userid'].astype('Int64')
-        # assign the course teacher role by matching the course id and the user id
-        for idx in range(len(teacher_role)):
-            df.loc[(df['courseid'] == teacher_role.iloc[idx]['courseid']) &
-                   (df['userid'] == teacher_role.iloc[idx]['userid']), 'Role'] = 'Teacher'
-
-    if non_editing_teacher_role != '':
-        # get data
-        non_editing_teacher_role = get_dataframe(non_editing_teacher_role, columns=['courseid', 'userid'])
-        # set data type
-        non_editing_teacher_role['courseid'] = non_editing_teacher_role['courseid'].astype('Int64')
-        non_editing_teacher_role['userid'] = non_editing_teacher_role['userid'].astype('Int64')
-        #  assign the course non-editing teacher role by matching the course id and the user id
-        for idx in range(len(non_editing_teacher_role)):
-            df.loc[(df['courseid'] == non_editing_teacher_role.iloc[idx]['courseid']) &
-                   (df['userid'] == non_editing_teacher_role.iloc[idx]['userid']), 'Role'] = 'Non-editing Teacher'
-
-    #  assign the course creator role
-    if course_creator_role != '':
-        # get data
-        course_creator_role = get_dataframe(course_creator_role, columns=['userid'])
-        # set data type
-        course_creator_role['userid'] = course_creator_role['userid'].astype('Int64')
-        for idx in range(len(course_creator_role)):
-            df.loc[df['userid'] == course_creator_role.iloc[idx]['userid'], 'Role'] = 'Course creator'
-
-    if manager_role != '':
-        # get data
-        manager_role = get_dataframe(manager_role, columns=['userid'])
-        # set data type
-        manager_role['userid'] = manager_role['userid'].astype('Int64')
-        # assign the manager role
-        for idx in range(len(manager_role)):
-            df.loc[df['userid'] == manager_role.iloc[idx]['userid'], 'Role'] = 'Manager'
-
-    if admin_role != '':
-        # get data
-        admin_role = get_dataframe(admin_role, columns=['value'])
-        # get userid whose role is admin
-        admin_role = admin_role['value'][0].split(',')
-        # assign the admin role
-        for idx in admin_role:
-            df.loc[df['userid'] == int(idx), 'Role'] = 'Admin'
-
-    # assign the authenticated user to left records
-    df.loc[(df['Role'].isnull()) &
-           (df['Username'] != '-'), 'Role'] = 'Authenticated user'
-
-    # assign the role 'guest' to guests and users who access the course just to have a look and then unenroll
-    df.loc[df['userid'] == 1, 'Role'] = 'Guest'
-    df.loc[(df['Role'].isnull()) &
-           (df['Course_Area'].notnull()) &
-           (df['Username'] != '-'), 'Role'] = 'Guest'
-
-    return df
-
-
 def redefine_course_area(df: DataFrame) -> DataFrame:
     """
-    Add the area to those records that do not belong to any field and have a missing value.
-
-    Args:
-        df: the joined dataframe.
-
-    Returns:
-        The dataframe with the integrated course_area field.
-
+    Add the Course_Area field to those records that identify actions performed in the site outside a course and that
+    miss a value.
     """
 
     # authentication
@@ -349,6 +195,8 @@ def redefine_course_area(df: DataFrame) -> DataFrame:
            (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
     df.loc[(df['Event_name'].str.contains('(?i)subscription')) &
            (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'].str.contains('(?i)content')) &
+           (df.courseid == 0), 'Course_Area'] = 'Moodle Site'
     df.loc[df['Event_name'] == 'Courses searched', 'Course_Area'] = 'Moodle Site'
     df.loc[df['Event_name'].str.contains('Discussion') &
            (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
@@ -365,7 +213,7 @@ def redefine_course_area(df: DataFrame) -> DataFrame:
            (df.courseid == 0), 'Course_Area'] = 'Moodle Site'
     df.loc[(df['Event_name'] == 'User created'), 'Course_Area'] = 'Moodle Site'
     df.loc[(df['Event_name'] == 'User deleted'), 'Course_Area'] = 'Moodle Site'
-    df.loc[(df['Event_name'].str.contains('post')) &
+    df.loc[(df['Event_name'].str.contains('(?i)post')) &
            (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
 
     # profile
@@ -379,10 +227,14 @@ def redefine_course_area(df: DataFrame) -> DataFrame:
            (df.courseid == 0), 'Course_Area'] = 'Profile'
     df.loc[(df['Event_name'] == 'Course user report viewed') &
            (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
+    df.loc[(df['Event_name'] == 'Grade overview report viewed') &
+           (df.courseid == 1), 'Course_Area'] = 'Moodle Site'
 
     # social interaction
     df.loc[(df['Event_name'].str.contains('(?i)message')) &
            (df['Component'] != 'Chat'), 'Course_Area'] = 'Social interaction'
+    df.loc[(df['Event_name'] == 'User profile viewed') &
+           (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Profile'
     df.loc[(df['Event_name'] == 'Blog entries viewed') &
            (df['Affected_user'] != df['Username']), 'Course_Area'] = 'Social interaction'
 
@@ -394,8 +246,6 @@ def redefine_component(df: DataFrame) -> DataFrame:
     The component field can be labelled with the 'System' value even though the log is clearly generated when the user
     is performing an action on a specific module. Sometimes some records are recorded on different components even
     though they are related to the same component. This function redefines the component field.
-    Reference paper: D Rotelli, A Monreale, Time-on-task estimation by data-driven outlier detection based on learning
-    activities, LAK22.
 
     Args:
         df: the joined dataframe.
@@ -473,7 +323,7 @@ def redefine_component(df: DataFrame) -> DataFrame:
     df.loc[df['Event_name'] == 'Scale deleted', 'Component'] = 'Gradebook'
 
     # grades
-    df.loc[df['Event_name'] == 'Grade overview report viewed', 'Component'] = 'Grades' #TODO check area
+    df.loc[df['Event_name'] == 'Grade overview report viewed', 'Component'] = 'Grades'
     df.loc[df['Event_name'] == 'Course user report viewed', 'Component'] = 'Grades'
     df.loc[df['Component'] == 'User report', 'Component'] = 'Grades'
 
@@ -491,6 +341,7 @@ def redefine_component(df: DataFrame) -> DataFrame:
     for idx in mca:
         # invert username with affected user
         df.loc[idx, ['Username', 'Affected_user']] = df.loc[idx, ['Affected_user', 'Username']].values
+        df.loc[idx, ['userid', 'relateduserid']] = df.loc[idx, ['relateduserid', 'userid']].values
 
     # notes
     df.loc[(df['Event_name'].str.contains('(?i)Notes')) & (df['Component'] == 'System'), 'Component'] = 'Notes'
@@ -533,19 +384,152 @@ def redefine_component(df: DataFrame) -> DataFrame:
     return df
 
 
+def add_role(df: DataFrame,
+             student_role: str,
+             teacher_role: str = '',
+             non_editing_teacher_role: str = '',
+             course_creator_role: str = '',
+             manager_role: str = '',
+             admin_role: str = '') -> DataFrame:
+
+    """
+    Add roles to the dataframe.
+
+    A role is a collection of permissions defined for the whole system that can be assigned to specific users in
+    specific contexts. When a user logs in, they are considered "authenticated." Users can be teachers or students
+    only within a course. A user can have multiple roles, representing as both a teacher and a student in different
+    courses. The complete list of roles is available at the page: your_moodle_site/admin/roles/manage.php. This
+    function can be extended according to specific requirements.
+
+    Please be aware that any system roles (suche as admin, manager, course-creator, or specifically created role) apply
+    to the assigned users throughout the entire system, including the front page and all the courses. A user can be a
+    teacher in a course and a student in another course. A manager can only be a manager.
+
+    Query for student, teacher, and non-editing teacher:
+        SELECT cx.instanceid as courseid, u.id as userid
+        FROM mdl_course c LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid
+        LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '???' AND cx.instanceid <> 1
+        LEFT OUTER JOIN mdl_user u ON ra.userid = u.id Where cx.contextlevel = '50'
+
+    Query for manager and course creator:
+        SELECT distinct userid
+        FROM mdl_role_assignments
+        WHERE roleid = '???'
+
+    Query for admin:
+        SELECT value
+        FROM mdl_config
+        WHERE name = 'siteadmins'
+
+    Args:
+        df: the joined dataframe.
+        student_role: str,
+            The path of the data extracted from database.
+            role id = 5, this field is mandatory
+        teacher_role: str,
+            The path of the data extracted from database.
+            role id = 3
+        non_editing_teacher_role: str,
+            The path of the data extracted from database.
+            role id = 4
+        course_creator_role: str,
+            The path of the data extracted from database.
+            role id = 2
+        manager_role: str,
+            The path of the data extracted from database.
+            role id = 1
+        admin_role: str,
+            The path of the data extracted from database.
+
+    Returns:
+        The joined dataframe with the role integration.
+    """
+
+    # get data
+    student_role = get_dataframe(student_role, columns=['courseid', 'userid'])
+    # set data type
+    student_role['courseid'] = student_role['courseid'].astype('Int64')
+    student_role['userid'] = student_role['userid'].astype('Int64')
+    # assign the course student role by matching the course id and the user id
+    for idx in range(len(student_role)):
+        df.loc[(df['courseid'] == student_role.iloc[idx]['courseid']) &
+               (df['userid'] == student_role.iloc[idx]['userid']), 'Role'] = 'Student'
+
+    if teacher_role != '':
+        # get data
+        teacher_role = get_dataframe(teacher_role, columns=['courseid', 'userid'])
+        # set data type
+        teacher_role['courseid'] = teacher_role['courseid'].astype('Int64')
+        teacher_role['userid'] = teacher_role['userid'].astype('Int64')
+        # assign the course teacher role by matching the course id and the user id
+        for idx in range(len(teacher_role)):
+            df.loc[(df['courseid'] == teacher_role.iloc[idx]['courseid']) &
+                   (df['userid'] == teacher_role.iloc[idx]['userid']), 'Role'] = 'Teacher'
+
+    if non_editing_teacher_role != '':
+        # get data
+        non_editing_teacher_role = get_dataframe(non_editing_teacher_role, columns=['courseid', 'userid'])
+        # set data type
+        non_editing_teacher_role['courseid'] = non_editing_teacher_role['courseid'].astype('Int64')
+        non_editing_teacher_role['userid'] = non_editing_teacher_role['userid'].astype('Int64')
+        #  assign the course non-editing teacher role by matching the course id and the user id
+        for idx in range(len(non_editing_teacher_role)):
+            df.loc[(df['courseid'] == non_editing_teacher_role.iloc[idx]['courseid']) &
+                   (df['userid'] == non_editing_teacher_role.iloc[idx]['userid']), 'Role'] = 'Non-editing Teacher'
+
+    #  assign the course creator role
+    if course_creator_role != '':
+        # get data
+        course_creator_role = get_dataframe(course_creator_role, columns=['userid'])
+        # set data type
+        course_creator_role['userid'] = course_creator_role['userid'].astype('Int64')
+        for idx in range(len(course_creator_role)):
+            df.loc[df['userid'] == course_creator_role.iloc[idx]['userid'], 'Role'] = 'Course creator'
+
+    if manager_role != '':
+        # get data
+        manager_role = get_dataframe(manager_role, columns=['userid'])
+        # set data type
+        manager_role['userid'] = manager_role['userid'].astype('Int64')
+        # assign the manager role
+        for idx in range(len(manager_role)):
+            df.loc[(df['Role'].isnull()) & (df['userid'] == manager_role.iloc[idx]['userid']), 'Role'] = 'Manager'
+
+    if admin_role != '':
+        # get data
+        admin_role = get_dataframe(admin_role, columns=['value'])
+        # get userid whose role is admin
+        admin_role = admin_role['value'][0].split(',')
+        # assign the admin role
+        for idx in admin_role:
+            df.loc[(df['Role'].isnull()) & (df['userid'] == int(idx)), 'Role'] = 'Admin'
+
+    # assign the role 'guest' to guests and users who access the course just to have a look and then unenroll
+    df.loc[df['userid'] == 1, 'Role'] = 'Guest'
+    courseids = df.loc[df.Course_Area.notnull()]['courseid'].unique()
+    for courseid in courseids:
+        if courseid > 1:
+            df.loc[(df['Role'].isnull()) & (df.courseid == courseid) & (df['Username'] != '-'), 'Role'] = 'Guest'
+
+    # assign the authenticated user to left records
+    df.loc[(df['Role'].isnull()) &
+           (df['Username'] != '-'), 'Role'] = 'Authenticated user'
+
+    return df
+
+
 def identify_deleted_modules(df: DataFrame) -> DataFrame:
     """
-    Identify actions performed on deleted modules
+    Identify actions performed on deleted modules, activities or course.
 
     Args:
         df: The dataframe object.
 
     Returns:
-        The dataframe with the type values for the deleted modules.
-
+        The dataframe with the type values: DELETED or Available.
     """
 
-    df.loc[df['Event_context'] == 'Other', 'Type'] = 'Deleted'
-    df.loc[df['Type'].isnull(), 'Type'] = 'Available'
+    df.loc[df['Event_context'] == 'Other', 'Status'] = 'DELETED'
+    df.loc[df['Status'].isnull(), 'Status'] = 'Available'
 
     return df

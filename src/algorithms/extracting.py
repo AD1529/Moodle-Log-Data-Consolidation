@@ -34,8 +34,9 @@ def get_startdate_enddate(df: DataFrame, course_dates: str, courses: [str], year
             startdate = course_dates.loc[course_dates['shortname'] == shortname, 'startdate'].values[0]
             enddate = course_dates.loc[course_dates['shortname'] == shortname, 'enddate'].values[0]
             to_remove = (df.loc[(df.Course_Area == course) & (df.Year == year) &
-                                (df.Unix_Time < startdate) | (df.Unix_Time > enddate)]).index
+                                ((df.Unix_Time < startdate) | (df.Unix_Time > enddate))]).index
             df.drop(to_remove, axis=0, inplace=True)
+            df = df.reset_index(drop=True)
 
     return df
 
@@ -87,7 +88,7 @@ def extract_records(records: Records,
 
     # get only the values between start_date and end_date
     if course_dates != "" and course_area is not None:
-        df = get_startdate_enddate(df, course_dates, course_area, year)
+        df = get_startdate_enddate(df.copy(), course_dates, course_area, year)
 
     # create a Records object for the extracted values
     records = Records(df)

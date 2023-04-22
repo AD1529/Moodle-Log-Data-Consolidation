@@ -1,0 +1,21 @@
+,Time,User full name,Affected user,Event context,Component,Event name,Description,Origin,IP address
+0,"23/01/23, 12:09",User 58,-,Front page,Logs,Log report viewed,The user with id '58' viewed the log report for the course with id '1'.,web,000.00.00.000
+1,"23/01/23, 12:09",User 58,User 58,User: User 58,System,Dashboard viewed,The user with id '58' has viewed their dashboard,web,000.00.00.000
+2,"23/01/23, 12:09",User 58,-,System,System,User has logged in,The user with id '58' has logged in.,web,000.00.00.000
+3,"23/01/23, 12:09",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+4,"23/01/23, 12:08",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+5,"23/01/23, 12:07",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+6,"23/01/23, 12:06",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+7,"23/01/23, 12:05",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+8,"23/01/23, 12:04",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+9,"23/01/23, 12:03",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+10,"23/01/23, 12:02",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+11,"23/01/23, 12:01",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+12,"23/01/23, 12:00",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+13,"23/01/23, 11:59",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+14,"23/01/23, 11:58",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+15,"23/01/23, 11:57",-,-,Front page,System,Course viewed,The user with id '0' viewed the course with id '1'.,web,000.00.00.000
+16,"23/01/23, 11:56",User 287,-,Course: Course name 36,System,Course viewed,The user with id '287' viewed the course with id '36'.,web,000.00.00.000
+17,"23/01/23, 11:56",User 287,-,"Assignment: Project",Assignment,The status of the submission has been viewed.,The user with id '287' has viewed the submission status page for the assignment with course module id '3364'.,web,000.00.00.000
+18,"23/01/23, 11:56",User 287,-,"Assignment: Project",Assignment,Course module viewed,The user with id '287' viewed the 'assign' activity with course module id '3364'.,web,000.00.00.000
+19,"23/01/23, 11:56",User 287,-,URL: Video: YouTube,URL,Course module viewed,The user with id '287' viewed the 'url' activity with course module id '4051'.,web,000.00.00.000

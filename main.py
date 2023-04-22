@@ -4,10 +4,10 @@ import src.algorithms.transforming as tr
 from pandas import DataFrame
 
 
-def get_consolidated_data(platform_logs: str or DataFrame,
-                          database_data: str,
+def get_consolidated_data(database_data: str,
                           course_shortnames: str,
                           student_role: str,
+                          platform_logs: str = "",
                           teacher_role: str = "",
                           non_editing_teacher_role: str = "",
                           course_creator_role: str = "",
@@ -16,35 +16,23 @@ def get_consolidated_data(platform_logs: str or DataFrame,
                           deleted_users: str = "",
                           directory: str = "") -> DataFrame:
     """
-    Get consolidated data.
+    Get consolidated dataframe.
 
     Args:
-        platform_logs: str,
-            The path to platform logs.
-        database_data: str,
-            The path to database data.
-        course_shortnames: str,
-            The path to course shortnames.
-        student_role: str,
-            The path to students data.
-        teacher_role: str, optional
-            The path to teachers data.
-        non_editing_teacher_role: str, optional
-            The path to non-editing teachers data.
-        course_creator_role: str, optional
-            The path to course creator data.
-        manager_role: str, optional
-            The path to manager data.
-        admin_role: str, optional
-            The path to admin data.
-        deleted_users: str, optional
-            The path to deleted users data.
-        directory:  str, optional
-            The path to the directory containing logs extracted user by user.
+        platform_logs: The path to platform logs.
+        database_data: The path to database data.
+        course_shortnames: The path to course shortnames.
+        student_role: The path to students data.
+        teacher_role: The path to teachers data; optional.
+        non_editing_teacher_role: The path to non-editing teachers data; optional.
+        course_creator_role: The path to course creator data; optional.
+        manager_role: The path to manager data; optional.
+        admin_role: The path to admin data; optional.
+        deleted_users: The path to deleted users data; optional.
+        directory: The path to the directory containing logs extracted user by user.
 
     Returns:
-        The consolidated log data.
-
+        The consolidated dataframe.
     """
 
     # --------------------
@@ -54,50 +42,46 @@ def get_consolidated_data(platform_logs: str or DataFrame,
     if directory != '':
         platform_logs = it.collect_user_logs(directory)
     # join the platform and the database data
-    joined_logs = it.get_joined_logs(platform_logs, database_data)
+    log_data = it.get_joined_logs(platform_logs, database_data)
     # add course shortnames
-    joined_logs = it.add_course_shortname(joined_logs, course_shortnames)
+    log_data = it.add_course_shortname(log_data, course_shortnames)
     # add year to platform logs
-    joined_logs = it.add_year(joined_logs)
-    # add roles
-    joined_logs = it.add_role(joined_logs, student_role, teacher_role, non_editing_teacher_role,
-                              course_creator_role, manager_role, admin_role)
+    log_data = it.add_year(log_data)
     # add the area to platform logs
-    joined_logs = it.redefine_course_area(joined_logs)
+    log_data = it.redefine_course_area(log_data)
     # redefine components
-    joined_logs = it.redefine_component(joined_logs)
+    log_data = it.redefine_component(log_data)
+    # add roles
+    log_data = it.add_role(log_data, student_role, teacher_role, non_editing_teacher_role,
+                           course_creator_role, manager_role, admin_role)
     # identify actions on deleted modules
-    joined_logs = it.identify_deleted_modules(joined_logs)
+    log_data = it.identify_deleted_modules(log_data)
 
     # --------------------
     # DATA TRANSFORMATION
     # --------------------
     # convert the timestamps to human-readable format
-    joined_logs = tr.make_timestamp_readable(joined_logs)
+    log_data = tr.make_timestamp_readable(log_data)
 
     # --------------------
     # DATA CLEANING
     # --------------------
-    # remove automatic events
-    joined_logs = cl.clean_automatic_events(joined_logs)
     # remove deleted users if any
-    joined_logs = cl.remove_deleted_users(joined_logs, deleted_users)
+    log_data = cl.remove_deleted_users(log_data, deleted_users)
+    # remove automatic events
+    log_data = cl.remove_automatic_events(log_data)
 
     # --------------------
     # DATA SELECTION
     # --------------------
-    # columns of the dataframe
-    # Time, Username, Affected_user, Event_context, Component, Event_name, Description, Origin, IP_address, ID, user_id,
-    # course_id, related_user_id, Unix_Time, Course_Area, Year, Role, Type
-
     # select and reorder columns
     columns = ['ID', 'Time', 'Year', 'Course_Area', 'Unix_Time', 'Username', 'Component', 'Event_name', 'Role',
-               'userid', 'Type']
+               'userid', 'courseid', 'Status']
 
     # drop unused columns
-    joined_logs = joined_logs[columns].copy()
+    log_data = log_data[columns].copy()
 
-    return joined_logs
+    return log_data
 
 
 if __name__ == '__main__':
@@ -119,4 +103,4 @@ if __name__ == '__main__':
     # df = cl.clean_dataset_records(df)
 
     # you can save the dataset for further analysis
-    # df.to_csv('datasets/df_consolidated.csv')
+    df.to_csv('src/datasets/consolidated_df.csv')
