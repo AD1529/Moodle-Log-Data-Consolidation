@@ -9,7 +9,7 @@ This repository contains the template for consolidating Moodle log data. It is b
 * [Get your consolidated data](#get-your-consolidated-data)
 * * [Example](#example)
 * [License](#license)
-* [Acknowledgments](#scknowledgements)
+* [Acknowledgments](#acknowledgements)
 * [Contacts](#contact--s-)
 
 
