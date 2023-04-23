@@ -2,6 +2,7 @@ import src.algorithms.transforming as tr
 import pandas as pd
 from pandas import DataFrame
 import glob
+import numpy as np
 
 
 def get_dataframe(file_path: str, columns: [] = None) -> DataFrame:
@@ -103,6 +104,7 @@ def get_joined_logs(platform: str or DataFrame, database: str) -> DataFrame:
 
     # sort database data
     database_data = database_data.sort_values(by=['timecreated', 'id'])
+    database_data = database_data.replace(to_replace='\\N', value=0)
     database_data = database_data.reset_index(drop=True)
 
     # align the number of records for both dataframes
@@ -167,7 +169,7 @@ def add_year(df: DataFrame) -> DataFrame:
     df['Year'] = df['Time'].map(lambda x: int(x.split('/')[2].split(',')[0]) + 2000)
 
     # set data type
-    df['Year'] = df['Year'].astype('Int64')
+    df['Year'] = df['Year'].astype('int64')
 
     return df
 
@@ -342,6 +344,9 @@ def redefine_component(df: DataFrame) -> DataFrame:
         # invert username with affected user
         df.loc[idx, ['Username', 'Affected_user']] = df.loc[idx, ['Affected_user', 'Username']].values
         df.loc[idx, ['userid', 'relateduserid']] = df.loc[idx, ['relateduserid', 'userid']].values
+
+    df['userid'] = np.floor(pd.to_numeric(df['userid'], errors='coerce')).astype('int64')
+    df['relateduserid'] = np.floor(pd.to_numeric(df['relateduserid'], errors='coerce')).astype('int64')
 
     # notes
     df.loc[(df['Event_name'].str.contains('(?i)Notes')) & (df['Component'] == 'System'), 'Component'] = 'Notes'
