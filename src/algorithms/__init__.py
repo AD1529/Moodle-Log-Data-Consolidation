@@ -1,4 +1,4 @@
-__all__ = ["Records", "cleaning", "extracting", "integrating", "sorting", "timing", "transforming"]
+__all__ = ["Records", "cleaning", "extracting", "integrating", "timing", "transforming"]
 
 from src.classes.records import Records
 from .cleaning import *
