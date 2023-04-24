@@ -120,7 +120,7 @@ After data consolidation, the collected log file will contain the following colu
 - _Year_ - the year of the course. Remove this field if you are only analysing data from a specific year. 
 - _Course_Area_ - the area of the platform or the course name
 - _Unix_Time_ - the Unix timestamp
-- _Username_ - the username of the user perfoming the action
+- _Username_ - the username of the user performing the action
 - _Component_ - the module type (e.g., Wiki, Page, File, Url, Quiz)
 - _Event_name_ - the type of action performed on the module (such as viewed, deleted, updated, created, and submitted)
 - 'Role' - student, teacher, admin, course creator, guest, non-editing teacher
