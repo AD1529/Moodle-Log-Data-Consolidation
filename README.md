@@ -44,7 +44,7 @@ Query for student (role = 5), teacher (role = 3), and non-editing teacher (role 
 SELECT cx.instanceid as courseid, u.id as userid
 FROM mdl_course c LEFT OUTER JOIN mdl_context cx ON c.id = cx.instanceid
 LEFT OUTER JOIN mdl_role_assignments ra ON cx.id = ra.contextid AND ra.roleid = '???' AND cx.instanceid <> 1
-LEFT OUTER JOIN mdl_user u ON ra.userid = u.id Where cx.contextlevel = '50'
+LEFT OUTER JOIN mdl_user u ON ra.userid = u.id WHERE cx.contextlevel = '50'
 ```
 Query for manager (role = 1) and course creator (role = 2):
 ```SQL
