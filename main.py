@@ -75,11 +75,11 @@ def get_consolidated_data(database_data: str,
     # DATA SELECTION
     # --------------------
     # select and reorder columns
-    columns = ['ID', 'Time', 'Year', 'Course_Area', 'Unix_Time', 'Username', 'Component', 'Event_name', 'Role',
+    COLUMNS = ['ID', 'Time', 'Year', 'Course_Area', 'Unix_Time', 'Username', 'Component', 'Event_name', 'Role',
                'userid', 'courseid', 'Status']
 
     # drop unused columns
-    log_data = log_data[columns].copy()
+    log_data = log_data[COLUMNS].copy()
 
     return log_data
 
