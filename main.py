@@ -89,15 +89,15 @@ if __name__ == '__main__':
     from src.paths import *
 
     # get the consolidated dataframe
-    df = get_consolidated_data(platform_logs=platform_logs_path,
-                               database_data=database_data_path,
-                               course_shortnames=course_shortnames_path,
-                               student_role=student_role_path,
-                               teacher_role=teacher_role_path,
-                               non_editing_teacher_role=non_editing_teacher_role_path,
-                               manager_role=manager_role_path,
-                               admin_role=admin_role_path,
-                               deleted_users=deleted_users_path)
+    df = get_consolidated_data(platform_logs=PLATFORM_LOGS_PATH,
+                               database_data=DATABASE_DATA_PATH,
+                               course_shortnames=COURSE_SHORTNAMES_PATH,
+                               student_role=STUDENT_ROLE_PATH,
+                               teacher_role=TEACHER_ROLE_PATH,
+                               non_editing_teacher_role=NON_EDITING_TEACHER_ROLE_PATH,
+                               manager_role=MANAGER_ROLE_PATH,
+                               admin_role=ADMIN_ROLE_PATH,
+                               deleted_users=DELETED_USERS_PATH)
 
     # remove useless data from the entire dataset
     # df = cl.clean_dataset_records(df)
