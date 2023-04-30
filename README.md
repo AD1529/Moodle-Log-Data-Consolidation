@@ -155,7 +155,7 @@ where id <> 1
 from src.classes.records import Records
 import src.algorithms.extracting as ex
 import pandas as pd
-from src.paths import example_dates_path
+from src.paths import COURSE_DATES_PATH
 
 # ------------
 # GET DATA
@@ -171,7 +171,7 @@ records = Records(df)
 # GET COURSES TO ANALYSE
 # ----------------------
 # select specific attributes to get the desired values
-course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], filepath=example_dates_path)
+course_A = ex.extract_records(records, course_area=['Course A'], role=['Student'], filepath=COURSE_DATES_PATH)
 course_B = ex.extract_records(records, username=['Student 01'])
 ```
 ## License
