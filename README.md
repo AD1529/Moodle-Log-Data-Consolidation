@@ -161,8 +161,8 @@ from src.paths import COURSE_DATES_PATH
 # GET DATA
 # ------------
 # get the consolidated dataframe
-df_path = 'src/datasets/df_consolidated.csv'
-df = pd.read_csv(df_path)
+DF_PATH = 'src/datasets/df_consolidated.csv'
+df = pd.read_csv(DF_PATH)
 
 # create a Records object to use its methods
 records = Records(df)
