@@ -129,7 +129,7 @@ After data consolidation, the collected log file will contain the following colu
 - 'Status' - status indicating whether the event was executed on a deleted activity or module
 
 ### Clean the dataset
-You can clean the dataset by modifying functions in `src/algorithms/cleaning.py` file according to your needs.
+You can clean the dataset by modifying functions in `src/algorithms/cleaning.py` and `src/algorithms/filtering.py` files according to your needs.
 
 ## Get course data
 Once the data has been consolidated, you can extract specific data.
